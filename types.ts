@@ -9,7 +9,7 @@ export interface Habit {
   startDate?: string; // YYYY-MM-DD
   restDays?: string[];
   targetTime: string; // e.g., '16:00'
-  lastCompletedAt: string | null;
+  lastCompletedAt?: string | null;
   nextDueDate: string; // YYYY-MM-DD
   lastNotifiedDueDate?: string;
 }

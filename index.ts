@@ -145,9 +145,9 @@ async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean 
   const userId = ctx.from.id;
   const userHabits = getHabits(userId);
 
-  const { startStr, endStr, days } = getWeekDaysByOffset(offset);
+  const { startDateUz, endDateUz, days } = getWeekDaysByOffset(offset);
 
-  let message = `📅 <b>Haftalik rejalaringiz</b>\n📌 <b>Oraliq:</b> <i>${startStr} — ${endStr}</i>\n\n`;
+  let message = `📅 <b>Haftalik rejalaringiz</b>\n📌 <b>Oraliq:</b> <i>${startDateUz} — ${endDateUz}</i>\n\n`;
 
   let totalScheduledInWeek = 0;
 
@@ -156,7 +156,7 @@ async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean 
 
     if (dayHabits.length > 0) {
       totalScheduledInWeek += dayHabits.length;
-      message += `<b>♦️ ${dayInfo.label}:</b>\n`;
+      message += `<b>♦️ ${dayInfo.weekdayName} (${dayInfo.formattedDateUz}):</b>\n`;
       message += `<blockquote>`;
       dayHabits.forEach((habit) => {
         const timeRemaining = getDaysRemainingText(habit.nextDueDate);
@@ -574,6 +574,7 @@ bot.on('text', async (ctx: any) => {
       startDate: state.startDate,
       restDays: state.restDays || [],
       targetTime: state.targetTime!,
+      lastCompletedAt: null,
       nextDueDate,
     });
 
