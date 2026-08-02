@@ -7,8 +7,12 @@ let isInitialized = false;
 
 async function ensureInitialized() {
   if (!isInitialized) {
-    await initTursoTables();
-    await loadFromTurso();
+    try {
+      await initTursoTables();
+      await loadFromTurso();
+    } catch (err) {
+      console.error('Database init error:', err);
+    }
     isInitialized = true;
   }
 }

@@ -51,13 +51,7 @@ export type MyConversation = Conversation<MyContext>;
 // Load environment variables from .env file
 dotenv.config();
 
-const token = process.env.BOT_TOKEN;
-
-if (!token || token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {
-  console.error('XATOLIK: .env faylida BOT_TOKEN ko\'rsatilmagan!');
-  console.error('Iltimos, .env fayliga haqiqiy Telegram Bot Tokenini kiriting.');
-  process.exit(1);
-}
+const token = process.env.BOT_TOKEN || '8766054938:AAHPWyYnGxxEHLcY1j14tRCHtuDQ9YTCxEc';
 
 // Initialize Telegram bot with grammY Context flavor
 const bot = new Bot<MyContext>(token);
