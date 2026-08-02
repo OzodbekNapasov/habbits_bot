@@ -136,11 +136,11 @@ export function getDaysRemainingText(nextDueDateStr: string): string {
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays <= 0) {
-    return 'Bugun 🔥';
+    return 'Bugun 🔥 ⚡️';
   } else if (diffDays === 1) {
-    return 'Ertaga (1 kun qoldi)';
+    return 'Ertaga ⏳ (1 kun qoldi)';
   } else {
-    return `${diffDays} kun qoldi`;
+    return `⏳ ${diffDays} kun qoldi`;
   }
 }
 

@@ -257,7 +257,7 @@
       <div class="user-subtitle">Shaxsiy Odatlar Boshqaruvi</div>
     </div>
     <div class="streak-badge">
-      🔥 <span id="streakCount">1</span> kun
+      🔥 ⚡️ <span id="streakCount">1</span> kun
     </div>
   </div>
 
@@ -285,7 +285,7 @@
 
   <!-- Section Title -->
   <div class="section-title">
-    📋 Sizning Odatlaringiz
+    💎 📋 Sizning Odatlaringiz
   </div>
 
   <!-- Habits List Container -->
@@ -314,7 +314,7 @@
         const data = await response.json();
 
         if (!data.habits || data.habits.length === 0) {
-          container.innerHTML = `<div class="empty-state">Sizda hali hech qanday odat yo'q. Telegram botda "➕ Yangi odat" tugmasini bosing.</div>`;
+          container.innerHTML = `<div class="empty-state">Sizda hali hech qanday odat yo'q. Telegram botda "✨ ➕ Yangi odat" tugmasini bosing.</div>`;
           document.getElementById('progressPercent').textContent = '0%';
           document.getElementById('progressBar').style.width = '0%';
           return;
@@ -335,14 +335,16 @@
             <div class="habit-details">
               <div class="habit-name">${habit.name}</div>
               <div class="habit-meta">
-                <span class="habit-tag">⏱ ${habit.intervalDescription || habit.intervalType}</span>
-                <span class="habit-tag">⏰ ${habit.targetTime}</span>
+                <span class="habit-tag">⚡️ ⏱ ${habit.intervalDescription || habit.intervalType}</span>
+                <span class="habit-tag">⏰ ⚡️ ${habit.targetTime}</span>
               </div>
             </div>
             <div class="habit-status">
-              ${isCompletedToday ? '✅' : '⏳'}
+              ${isCompletedToday ? '🌟 ✅' : '⏳ ⏳'}
             </div>
           `;
+          container.appendChild(item);
+        });
           container.appendChild(item);
         });
 

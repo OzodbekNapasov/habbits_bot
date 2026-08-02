@@ -48,15 +48,23 @@ export async function loadFromTurso(): Promise<void> {
 
     const usersMap = new Map<number, User>();
 
+    const currentDb = readDb();
+    const existingStatesMap = new Map<number, any>();
+    currentDb.users.forEach((u) => {
+      if (u.creationState) existingStatesMap.set(u.id, u.creationState);
+    });
+
     for (const row of usersResult.rows) {
       const id = Number(row.id);
       const firstName = String(row.first_name);
       const notificationsEnabled = row.notifications_enabled === 1 || row.notifications_enabled === true;
+      const creationState = creationStateMap.get(id) || existingStatesMap.get(id) || null;
 
       usersMap.set(id, {
         id,
         firstName,
         notificationsEnabled,
+        creationState,
         habits: [],
       });
     }
@@ -371,10 +379,16 @@ export function updateHabit(
   return habit;
 }
 
+const creationStateMap = new Map<number, any>();
+
 /**
  * Gets user creation state from database
  */
 export function getUserCreationState(userId: number): any {
+  const inMemoryState = creationStateMap.get(userId);
+  if (inMemoryState !== undefined) {
+    return inMemoryState;
+  }
   const db = readDb();
   const user = db.users.find((u) => u.id === userId);
   return user ? user.creationState || null : null;
@@ -384,6 +398,12 @@ export function getUserCreationState(userId: number): any {
  * Sets user creation state in database (creates user if not exists)
  */
 export function setUserCreationState(userId: number, state: any): void {
+  if (state === null || state === undefined) {
+    creationStateMap.delete(userId);
+  } else {
+    creationStateMap.set(userId, state);
+  }
+
   const db = readDb();
   let user = db.users.find((u) => u.id === userId);
   if (!user) {

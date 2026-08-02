@@ -83,24 +83,12 @@ bot.command('start', async (ctx) => {
   setUserCreationState(ctx.from.id, null);
 
   const startMessage =
-    `👑 <b>Xush kelibsiz, ${escapeHtml(ctx.from?.first_name || 'Foydalanuvchi')}!</b> ✨\n\n` +
-    `Men sizning shaxsiy <b>VIP Telegram Odatlar Treker</b> botingizman!\n\n` +
-    `⚡️ <b>Botingizning asosiy imkoniyatlari:</b>\n\n` +
-    `🎯 <b>1. Yangi odat yaratish (✨ ➕ Yangi odat)</b>\n` +
-    ` • Kunlik, haftalik, oylik va maxsus oraliqdagi (masalan: har 3 kunda) odatlar\n` +
-    ` • Eslatma soatlarini belgilash (masalan: <code>07:00</code>, <code>21:30</code>)\n\n` +
-    `📊 <b>2. Odatlar va Rejalar (📊 📋 Mening odatlarim)</b>\n` +
-    ` • ☀️ <b>Bugungi rejalar:</b> Bugungi muhim vazifalaringiz\n` +
-    ` • 🗓 <b>Haftalik rejalar:</b> 7 kunlik interaktiv haftalik jadval\n` +
-    ` • 📆 <b>Oylik va Barcha odatlar:</b> To'liq ro'yxat va statistika\n\n` +
-    `🔔 <b>3. Aqlli Eslatmalar & Dayjestlar</b>\n` +
-    ` • Aniq daqiqada xabardor qiluvchi bildirishnomalar\n` +
-    ` • ⏱ <b>Snooze tugmalari:</b> 15 min, 30 min yoki 1 soatga surish\n` +
-    ` • ☀️ Har kuni 07:00 AM da <b>Kunlik Dayjest</b> va motivatsiya\n` +
-    ` • 📅 Har Dushanba 07:00 AM da <b>Haftalik Dayjest</b>\n\n` +
-    `💎 <b>4. Telegram Mini App (💎 🌐 Mini App)</b>\n` +
-    ` • Veb-interfeys, streaklar va vizual progress grafiklari\n\n` +
-    `⚙️ <b>Boshlash uchun pastdagi menyu tugmalaridan birini bosing:</b> 👇`;
+    `👑 <b>Salom, ${escapeHtml(ctx.from?.first_name || 'Foydalanuvchi')}!</b> ✨\n\n` +
+    `Men sizning shaxsiy <b>VIP Odatlar Treker</b> botingizman.\n\n` +
+    `🎯 <b>Yangi odat qo'shish:</b> ✨ ➕ Yangi odat\n` +
+    `📊 <b>Odatlaringizni ko'rish:</b> 📊 📋 Mening odatlarim\n` +
+    `💎 <b>Mini App interfeysi:</b> 💎 🌐 Mini App\n\n` +
+    `👇 <b>Boshlash uchun menyudan kerakli tugmani bosing:</b>`;
 
   await ctx.reply(startMessage, { parse_mode: 'HTML', ...mainMenuKeyboard });
 });
@@ -264,7 +252,7 @@ bot.hears(/(?:✨\s*)?➕\s*Yangi odat/, async (ctx: any) => {
 
 bot.command('bekor', async (ctx: any) => {
   setUserCreationState(ctx.from.id, null);
-  await ctx.reply("❌ Odat qo'shish bekor qilindi.", mainMenuKeyboard);
+  await ctx.reply("❌ 🚫 Odat qo'shish bekor qilindi.", mainMenuKeyboard);
 });
 
 // Callback Query Handlers
@@ -284,7 +272,7 @@ bot.action('filter_today', async (ctx: any) => {
       message += `📌 <b>${escapeHtml(habit.name)}</b>\n`;
       message += `⏰ <b>Vaqti:</b> Soat <code>${habit.targetTime}</code> da\n`;
       message += `🔄 <b>Takrorlanish:</b> ${getPrettyIntervalName(habit)}\n`;
-      message += `⏳ <b>Holat:</b> Bugun 🔥`;
+      message += `⏳ <b>Holat:</b> Bugun 🔥 ⚡️`;
       message += `</blockquote>\n\n`;
     });
   }
@@ -296,7 +284,7 @@ bot.action('filter_today', async (ctx: any) => {
 
   const buttons: any[] = [];
   if (habitsRow.length > 0) buttons.push(habitsRow);
-  buttons.push([Markup.button.callback('🔙 Orqaga', 'list_habits')]);
+  buttons.push([Markup.button.callback('🔙 ◀️ Orqaga', 'list_habits')]);
 
   await ctx.editMessageText(message, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
   await ctx.answerCbQuery();
@@ -341,7 +329,7 @@ bot.action('filter_month', async (ctx: any) => {
 
   const buttons: any[] = [];
   if (habitsRow.length > 0) buttons.push(habitsRow);
-  buttons.push([Markup.button.callback('🔙 Orqaga', 'list_habits')]);
+  buttons.push([Markup.button.callback('🔙 ◀️ Orqaga', 'list_habits')]);
 
   await ctx.editMessageText(message, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
   await ctx.answerCbQuery();
@@ -371,7 +359,7 @@ bot.action('filter_all', async (ctx: any) => {
 
   const buttons: any[] = [];
   if (habitsRow.length > 0) buttons.push(habitsRow);
-  buttons.push([Markup.button.callback('🔙 Orqaga', 'list_habits')]);
+  buttons.push([Markup.button.callback('🔙 ◀️ Orqaga', 'list_habits')]);
 
   await ctx.editMessageText(message, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
   await ctx.answerCbQuery();
@@ -404,16 +392,16 @@ bot.action(/^view_(.+)$/, async (ctx: any) => {
   const { habit } = habitInfo;
   const remainingText = getDaysRemainingText(habit.nextDueDate);
 
-  let message = `📌 <b>Odat batafsil ma'lumotlari:</b>\n\n`;
+  let message = `📌 📍 👑 <b>Odat batafsil ma'lumotlari:</b>\n\n`;
   message += `<b>Nomi:</b> ${escapeHtml(habit.name)}\n`;
   message += `<b>Takrorlanish turi:</b> ${getPrettyIntervalName(habit)}\n`;
-  message += `<b>Eslatma soati:</b> ${habit.targetTime}\n`;
+  message += `<b>Eslatma soati:</b> <code>${habit.targetTime}</code>\n`;
   message += `<b>Keyingi bajarish kuni:</b> ${formatDateWithWeekday(habit.nextDueDate)}\n`;
   message += `<b>Qolgan vaqt:</b> <i>${remainingText}</i>\n`;
 
   const keyboard = Markup.inlineKeyboard([
-    [Markup.button.callback('🗑 O\'chirish', `delete_${habit.id}`)],
-    [Markup.button.callback('🔙 Orqaga', 'list_habits')],
+    [Markup.button.callback('🔥 🗑 O\'chirish', `delete_${habit.id}`)],
+    [Markup.button.callback('🔙 ◀️ Orqaga', 'list_habits')],
   ]);
 
   await ctx.editMessageText(message, { parse_mode: 'HTML', ...keyboard });
@@ -425,8 +413,8 @@ bot.action(/^delete_(.+)$/, async (ctx: any) => {
   const userId = ctx.from.id;
   deleteHabit(userId, habitId);
 
-  await ctx.editMessageText("✅ Odat muvaffaqiyatli o'chirildi.");
-  await ctx.answerCbQuery("Odat o'chirildi! 🗑");
+  await ctx.editMessageText("🔥 🗑 Odat muvaffaqiyatli o'chirildi.");
+  await ctx.answerCbQuery("Odat o'chirildi! 🔥 🗑");
 });
 
 bot.action(/^done_(.+)$/, async (ctx: any) => {
@@ -456,8 +444,8 @@ bot.action(/^done_(.+)$/, async (ctx: any) => {
     nextDueDate,
   });
 
-  await ctx.editMessageText(`🎉 Barakalla! <b>${escapeHtml(habit.name)}</b> odatini muvaffaqiyatli bajardingiz! Keyingi eslatma kuni: ${formatDateWithWeekday(nextDueDate)}.`, { parse_mode: 'HTML' });
-  await ctx.answerCbQuery("Barakalla! 🎉");
+  await ctx.editMessageText(`🌟 👑 🎉 Barakalla! <b>${escapeHtml(habit.name)}</b> odatini muvaffaqiyatli bajardingiz! Keyingi eslatma kuni: ${formatDateWithWeekday(nextDueDate)}.`, { parse_mode: 'HTML' });
+  await ctx.answerCbQuery("Barakalla! 🌟 🎉");
 });
 
 bot.action(/^skip_(.+)$/, async (ctx: any) => {
@@ -483,8 +471,8 @@ bot.action(/^skip_(.+)$/, async (ctx: any) => {
 
   updateHabit(userId, habitId, { nextDueDate });
 
-  await ctx.editMessageText('❌ Bu safargi harakat qoldirildi.');
-  await ctx.answerCbQuery("Harakat qoldirildi. ❌");
+  await ctx.editMessageText('❌ 🚫 Bu safargi harakat qoldirildi.');
+  await ctx.answerCbQuery("Harakat qoldirildi. ❌ 🚫");
 });
 
 bot.action(/^delay_(\d+)_(.+)$/, async (ctx: any) => {
@@ -508,10 +496,10 @@ bot.action(/^delay_(\d+)_(.+)$/, async (ctx: any) => {
   });
 
   await ctx.editMessageText(
-    `⏱ <b>${escapeHtml(habit.name)}</b> odati eslatmasi <b>${minutesToAdd} minutga</b> surildi.\n\nYangi eslatma vaqti: <b>${newTargetTime}</b>`,
+    `⚡️ ⏱ <b>${escapeHtml(habit.name)}</b> odati eslatmasi <b>${minutesToAdd} minutga</b> surildi.\n\nYangi eslatma vaqti: <code>${newTargetTime}</code>`,
     { parse_mode: 'HTML' }
   );
-  await ctx.answerCbQuery(`${minutesToAdd} minutga surildi! ⏱`);
+  await ctx.answerCbQuery(`${minutesToAdd} minutga surildi! ⚡️ ⏱`);
 });
 
 bot.action('toggle_notifications', async (ctx: any) => {
@@ -524,18 +512,18 @@ bot.action('toggle_notifications', async (ctx: any) => {
 
 bot.action('confirm_clear_all', async (ctx: any) => {
   const keyboard = Markup.inlineKeyboard([
-    [Markup.button.callback('⚠️ Ha, barchasini o\'chirish', 'clear_all_habits')],
-    [Markup.button.callback('❌ Bekor qilish', 'list_habits')],
+    [Markup.button.callback('⚠️ 🔥 Ha, barchasini o\'chirish', 'clear_all_habits')],
+    [Markup.button.callback('❌ 🚫 Bekor qilish', 'list_habits')],
   ]);
-  await ctx.editMessageText("⚠️ <b>Haqiqatan ham barcha odatlaringizni o'chirib tashlamoqchimisiz?</b>\n\nBu amalni ortga qaytarib bo'lmaydi!", { parse_mode: 'HTML', ...keyboard });
+  await ctx.editMessageText("⚠️ ⚡️ <b>Haqiqatan ham barcha odatlaringizni o'chirib tashlamoqchimisiz?</b>\n\nBu amalni ortga qaytarib bo'lmaydi!", { parse_mode: 'HTML', ...keyboard });
   await ctx.answerCbQuery();
 });
 
 bot.action('clear_all_habits', async (ctx: any) => {
   const userId = ctx.from.id;
   clearUserHabits(userId);
-  await ctx.editMessageText("🗑 Barcha odatlaringiz muvaffaqiyatli o'chirildi.");
-  await ctx.answerCbQuery("Barcha odatlar o'chirildi!");
+  await ctx.editMessageText("🔥 🗑 Barcha odatlaringiz muvaffaqiyatli o'chirildi.");
+  await ctx.answerCbQuery("Barcha odatlar o'chirildi! 🔥 🗑");
 });
 
 // Interval Selection Callbacks for Habit Creation
