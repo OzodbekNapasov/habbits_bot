@@ -2,14 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "index.ts",
+      "src": "api/bot.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/api/bot",
+      "dest": "api/bot.ts"
+    },
+    {
       "src": "/(.*)",
-      "dest": "index.ts"
+      "dest": "api/bot.ts"
     }
   ]
 }

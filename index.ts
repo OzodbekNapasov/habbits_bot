@@ -1066,12 +1066,16 @@ initTursoTables().then(() => {
   loadFromTurso();
 });
 
-// Initialize 1-minute reminder and dayjest cron jobs
-initReminderCron(bot);
+export { bot };
 
-// Initialize HTTP Web Server for Telegram Mini App & REST APIs
-startWebServer();
+if (process.env.VERCEL !== '1') {
+  // Initialize 1-minute reminder and dayjest cron jobs
+  initReminderCron(bot);
 
-// Start the bot
-console.log('🤖 Telegram Odatlar Boti ishga tushmoqda...');
-bot.start();
+  // Initialize HTTP Web Server for Telegram Mini App & REST APIs
+  startWebServer();
+
+  // Start the bot
+  console.log('🤖 Telegram Odatlar Boti ishga tushmoqda...');
+  bot.start();
+}
