@@ -62,14 +62,14 @@ bot.use(async (ctx, next) => {
   await next();
 });
 
-// Main Menu Keyboard in Uzbek
+// Main Menu Keyboard in Uzbek with Telegram Premium Emojis
 const mainMenuKeyboard = Markup.keyboard([
-  ['➕ Yangi odat', '📋 Mening odatlarim'],
-  ['⚙️ Sozlamalar', '🌐 Mini App'],
+  ['✨ ➕ Yangi odat', '📊 📋 Mening odatlarim'],
+  ['⚙️ Sozlamalar', '💎 🌐 Mini App'],
 ]).resize();
 
 /**
- * /start command handler
+ * /start command handler with rich detailed welcome info
  */
 bot.command('start', async (ctx) => {
   const from = ctx.from;
@@ -82,24 +82,41 @@ bot.command('start', async (ctx) => {
 
   setUserCreationState(ctx.from.id, null);
 
-  await ctx.reply(
-    `Salom! Men sizning shaxsiy odatlar trekeriman. Odatlarni boshqarish uchun pastdagi menyudan foydalaning.`,
-    mainMenuKeyboard
-  );
+  const startMessage =
+    `👑 <b>Xush kelibsiz, ${escapeHtml(ctx.from?.first_name || 'Foydalanuvchi')}!</b> ✨\n\n` +
+    `Men sizning shaxsiy <b>VIP Telegram Odatlar Treker</b> botingizman!\n\n` +
+    `⚡️ <b>Botingizning asosiy imkoniyatlari:</b>\n\n` +
+    `🎯 <b>1. Yangi odat yaratish (✨ ➕ Yangi odat)</b>\n` +
+    ` • Kunlik, haftalik, oylik va maxsus oraliqdagi (masalan: har 3 kunda) odatlar\n` +
+    ` • Eslatma soatlarini belgilash (masalan: <code>07:00</code>, <code>21:30</code>)\n\n` +
+    `📊 <b>2. Odatlar va Rejalar (📊 📋 Mening odatlarim)</b>\n` +
+    ` • ☀️ <b>Bugungi rejalar:</b> Bugungi muhim vazifalaringiz\n` +
+    ` • 🗓 <b>Haftalik rejalar:</b> 7 kunlik interaktiv haftalik jadval\n` +
+    ` • 📆 <b>Oylik va Barcha odatlar:</b> To'liq ro'yxat va statistika\n\n` +
+    `🔔 <b>3. Aqlli Eslatmalar & Dayjestlar</b>\n` +
+    ` • Aniq daqiqada xabardor qiluvchi bildirishnomalar\n` +
+    ` • ⏱ <b>Snooze tugmalari:</b> 15 min, 30 min yoki 1 soatga surish\n` +
+    ` • ☀️ Har kuni 07:00 AM da <b>Kunlik Dayjest</b> va motivatsiya\n` +
+    ` • 📅 Har Dushanba 07:00 AM da <b>Haftalik Dayjest</b>\n\n` +
+    `💎 <b>4. Telegram Mini App (💎 🌐 Mini App)</b>\n` +
+    ` • Veb-interfeys, streaklar va vizual progress grafiklari\n\n` +
+    `⚙️ <b>Boshlash uchun pastdagi menyu tugmalaridan birini bosing:</b> 👇`;
+
+  await ctx.reply(startMessage, { parse_mode: 'HTML', ...mainMenuKeyboard });
 });
 
 /**
- * Helper to build Period Selection Keyboard
+ * Helper to build Period Selection Keyboard with Premium Emojis
  */
 function buildPeriodSelectionKeyboard() {
   return Markup.inlineKeyboard([
     [
-      Markup.button.callback('📅 Bugungi rejalar', 'filter_today'),
-      Markup.button.callback('🗓 Shu haftalik rejalar', 'filter_week'),
+      Markup.button.callback('👑 📅 Bugungi rejalar', 'filter_today'),
+      Markup.button.callback('⚡️ 🗓 Shu haftalik rejalar', 'filter_week'),
     ],
     [
-      Markup.button.callback('📆 Shu oylik rejalar', 'filter_month'),
-      Markup.button.callback('📋 Barcha odatlarim', 'filter_all'),
+      Markup.button.callback('🔮 📆 Shu oylik rejalar', 'filter_month'),
+      Markup.button.callback('💎 📋 Barcha odatlarim', 'filter_all'),
     ],
   ]);
 }
@@ -110,19 +127,19 @@ function buildPeriodSelectionKeyboard() {
 function buildSettingsMessageAndKeyboard(userId: number, firstName: string) {
   const user = getUser(userId);
   const habits = getHabits(userId);
-  const notificationsStatus = user?.notificationsEnabled !== false ? '🔔 Yoqilgan' : '🔕 O\'chirilgan';
+  const notificationsStatus = user?.notificationsEnabled !== false ? '🔔 ⚡️ Yoqilgan' : '🔕 O\'chirilgan';
 
   const text =
-    `⚙️ <b>Sozlamalar paneli</b>\n\n` +
+    `⚙️ 👑 <b>Sozlamalar paneli</b>\n\n` +
     `👤 <b>Foydalanuvchi:</b> ${escapeHtml(firstName)}\n` +
     `🆔 <b>Telegram ID:</b> <code>${userId}</code>\n` +
     `📊 <b>Odatlar soni:</b> ${habits.length} ta\n` +
     `🔔 <b>Eslatmalar:</b> ${notificationsStatus}\n\n` +
-    `Kerakli amalni tanlang:`;
+    `✨ Kerakli amalni tanlang:`;
 
   const keyboard = Markup.inlineKeyboard([
-    [Markup.button.callback(`🔔 Eslatmalarni o'zgartirish (${notificationsStatus})`, 'toggle_notifications')],
-    [Markup.button.callback('🗑 Barcha odatlarni o\'chirish', 'confirm_clear_all')],
+    [Markup.button.callback(`🔔 ⚡️ Eslatmalarni o'zgartirish (${notificationsStatus})`, 'toggle_notifications')],
+    [Markup.button.callback('🔥 🗑 Barcha odatlarni o\'chirish', 'confirm_clear_all')],
   ]);
 
   return { text, keyboard };
@@ -137,7 +154,7 @@ async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean 
 
   const { startDateUz, endDateUz, days } = getWeekDaysByOffset(offset);
 
-  let message = `📅 <b>Haftalik rejalaringiz</b>\n📌 <b>Oraliq:</b> <i>${startDateUz} — ${endDateUz}</i>\n\n`;
+  let message = `✨ 🗓 <b>Haftalik rejalaringiz</b>\n📌 <b>Oraliq:</b> <i>${startDateUz} — ${endDateUz}</i>\n\n`;
 
   let totalScheduledInWeek = 0;
 
@@ -150,7 +167,7 @@ async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean 
       message += `<blockquote>`;
       dayHabits.forEach((habit) => {
         const timeRemaining = getDaysRemainingText(habit.nextDueDate);
-        message += `📌 <b>${escapeHtml(habit.name)}</b> (Soat: ${habit.targetTime} da) — <i>${timeRemaining}</i>\n`;
+        message += `📌 <b>${escapeHtml(habit.name)}</b> (Soat: <code>${habit.targetTime}</code> da) — <i>${timeRemaining}</i>\n`;
       });
       message += `</blockquote>\n\n`;
     }
@@ -174,8 +191,8 @@ async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean 
   }
 
   buttons.push([
-    Markup.button.callback('⬅️ Oldingi hafta', `week_nav_${offset - 1}`),
-    Markup.button.callback('➡️ Keyingi hafta', `week_nav_${offset + 1}`),
+    Markup.button.callback('◀️ Oldingi hafta', `week_nav_${offset - 1}`),
+    Markup.button.callback('▶️ Keyingi hafta', `week_nav_${offset + 1}`),
   ]);
 
   buttons.push([Markup.button.callback('🔙 Orqaga', 'list_habits')]);
@@ -194,35 +211,38 @@ async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean 
 }
 
 // Bot Hears Commands & Keyboard Actions
-bot.hears('📋 Mening odatlarim', async (ctx: any) => {
+bot.hears(/(?:📊\s*)?📋\s*Mening odatlarim/, async (ctx: any) => {
+  saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
   setUserCreationState(ctx.from.id, null);
   const userId = ctx.from.id;
   const habits = getHabits(userId);
 
   if (habits.length === 0) {
-    await ctx.reply("Sizda hozircha hech qanday odat yo'q. Yangi odat qo'shish uchun ➕ <b>Yangi odat</b> tugmasini bosing.", { parse_mode: 'HTML' });
+    await ctx.reply("✨ Sizda hozircha hech qanday odat yo'q. Yangi odat qo'shish uchun <b>✨ ➕ Yangi odat</b> tugmasini bosing.", { parse_mode: 'HTML', ...mainMenuKeyboard });
   } else {
-    await ctx.reply("📋 <b>Odatlar va Rejalar bo'limi</b>\n\nQaysi davr uchun rejalashtirilgan odatlaringizni ko'rmoqchisiz?", {
+    await ctx.reply("📋 ⚡️ <b>Odatlar va Rejalar bo'limi</b>\n\nQaysi davr uchun rejalashtirilgan odatlaringizni ko'rmoqchisiz?", {
       parse_mode: 'HTML',
       ...buildPeriodSelectionKeyboard(),
     });
   }
 });
 
-bot.hears('⚙️ Sozlamalar', async (ctx: any) => {
+bot.hears(/(?:⚙️\s*)?Sozlamalar/, async (ctx: any) => {
+  saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
   setUserCreationState(ctx.from.id, null);
   const userId = ctx.from.id;
   const { text, keyboard } = buildSettingsMessageAndKeyboard(userId, ctx.from.first_name || 'Foydalanuvchi');
   await ctx.reply(text, { parse_mode: 'HTML', ...keyboard });
 });
 
-bot.hears('🌐 Mini App', async (ctx: any) => {
+bot.hears(/(?:💎\s*)?🌐\s*Mini App/, async (ctx: any) => {
+  saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
   setUserCreationState(ctx.from.id, null);
   const miniAppUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://habbits-bot-seven.vercel.app/';
   const keyboard = Markup.inlineKeyboard([
-    [Markup.button.webApp('🚀 Mini App Dashboard', miniAppUrl)],
+    [Markup.button.webApp('🚀 💎 Mini App Dashboard', miniAppUrl)],
   ]);
-  await ctx.reply("🌐 <b>Telegram Mini App loyihasi</b>\n\nOdatlaringizni interaktiv grafiklar va chiroyli interfeys orqali boshqarish uchun pastdagi tugmani bosing:", {
+  await ctx.reply("💎 🌐 <b>Telegram Mini App loyihasi</b>\n\nOdatlaringizni interaktiv grafiklar va chiroyli interfeys orqali boshqarish uchun pastdagi tugmani bosing:", {
     parse_mode: 'HTML',
     ...keyboard,
   });
@@ -233,10 +253,11 @@ bot.command('digest', async (ctx: any) => {
 });
 
 // Habit Creation Flow Handlers
-bot.hears('➕ Yangi odat', async (ctx: any) => {
+bot.hears(/(?:✨\s*)?➕\s*Yangi odat/, async (ctx: any) => {
+  saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
   setUserCreationState(ctx.from.id, { step: 'WAITING_NAME' });
   await ctx.reply(
-    "📝 <b>Yangi odat nomini kiriting:</b>\n\nMasalan: <i>Mashg'ulot, Kitob o'qish, Sartaroshga borish</i>\n\n<i>Bekor qilish uchun /bekor buyrug'ini yuboring.</i>",
+    "✨ 📝 <b>Yangi odat nomini kiriting:</b>\n\nMasalan: <i>Mashg'ulot, Kitob o'qish, Sartaroshga borish</i>\n\n<i>Bekor qilish uchun /bekor buyrug'ini yuboring.</i>",
     { parse_mode: 'HTML' }
   );
 });
@@ -253,7 +274,7 @@ bot.action('filter_today', async (ctx: any) => {
   const todayStr = getTodayDateString();
   const todayHabits = habits.filter((h) => isHabitForToday(h.nextDueDate, todayStr));
 
-  let message = `📅 <b>Bugungi odatlaringiz (${formatDateUzbek(todayStr)}):</b>\n\n`;
+  let message = `👑 📅 <b>Bugungi odatlaringiz (${formatDateUzbek(todayStr)}):</b>\n\n`;
 
   if (todayHabits.length === 0) {
     message += `<i>Bugun uchun hech qanday odat rejalashtirilmagan. Unumli dam oling!</i>`;
@@ -261,7 +282,7 @@ bot.action('filter_today', async (ctx: any) => {
     todayHabits.forEach((habit) => {
       message += `<blockquote>`;
       message += `📌 <b>${escapeHtml(habit.name)}</b>\n`;
-      message += `⏰ <b>Vaqti:</b> Soat ${habit.targetTime} da\n`;
+      message += `⏰ <b>Vaqti:</b> Soat <code>${habit.targetTime}</code> da\n`;
       message += `🔄 <b>Takrorlanish:</b> ${getPrettyIntervalName(habit)}\n`;
       message += `⏳ <b>Holat:</b> Bugun 🔥`;
       message += `</blockquote>\n\n`;
@@ -297,7 +318,7 @@ bot.action('filter_month', async (ctx: any) => {
   const habits = getHabits(userId);
   const monthHabits = habits.filter((h) => isHabitInNextDays(h.nextDueDate, 30));
 
-  let message = `📆 <b>Shu oylik rejalashtirilgan odatlaringiz:</b>\n\n`;
+  let message = `🔮 📆 <b>Shu oylik rejalashtirilgan odatlaringiz:</b>\n\n`;
 
   if (monthHabits.length === 0) {
     message += `<i>Shu oy uchun hech qanday odat rejalashtirilmagan.</i>`;
@@ -307,7 +328,7 @@ bot.action('filter_month', async (ctx: any) => {
       message += `<blockquote>`;
       message += `📌 <b>${escapeHtml(habit.name)}</b>\n`;
       message += `📅 <b>Kuni:</b> ${formatDateWithWeekday(habit.nextDueDate)}\n`;
-      message += `⏰ <b>Vaqti:</b> ${habit.targetTime}\n`;
+      message += `⏰ <b>Vaqti:</b> <code>${habit.targetTime}</code>\n`;
       message += `⏳ <b>Qolgan vaqt:</b> <i>${remainingText}</i>`;
       message += `</blockquote>\n\n`;
     });
@@ -330,14 +351,14 @@ bot.action('filter_all', async (ctx: any) => {
   const userId = ctx.from.id;
   const habits = getHabits(userId);
 
-  let message = `📋 <b>Barcha odatlaringiz ro'yxati (${habits.length} ta):</b>\n\n`;
+  let message = `💎 📋 <b>Barcha odatlaringiz ro'yxati (${habits.length} ta):</b>\n\n`;
 
   habits.forEach((habit) => {
     const remainingText = getDaysRemainingText(habit.nextDueDate);
     message += `<blockquote>`;
     message += `📌 <b>${escapeHtml(habit.name)}</b>\n`;
     message += `🔄 <b>Oraliq:</b> ${getPrettyIntervalName(habit)}\n`;
-    message += `⏰ <b>Soati:</b> ${habit.targetTime}\n`;
+    message += `⏰ <b>Soati:</b> <code>${habit.targetTime}</code>\n`;
     message += `📅 <b>Keyingi reja:</b> ${formatDateWithWeekday(habit.nextDueDate)}\n`;
     message += `⏳ <b>Qolgan vaqt:</b> <i>${remainingText}</i>`;
     message += `</blockquote>\n\n`;
@@ -361,10 +382,10 @@ bot.action('list_habits', async (ctx: any) => {
   const habits = getHabits(userId);
 
   if (habits.length === 0) {
-    await ctx.editMessageText("Sizda hozircha hech qanday odat yo'q.");
+    await ctx.editMessageText("✨ Sizda hozircha hech qanday odat yo'q.");
   } else {
     await ctx.editMessageText(
-      "📋 <b>Odatlar va Rejalar bo'limi</b>\n\nQaysi davr uchun rejalashtirilgan odatlaringizni ko'rmoqchisiz?",
+      "📋 ⚡️ <b>Odatlar va Rejalar bo'limi</b>\n\nQaysi davr uchun rejalashtirilgan odatlaringizni ko'rmoqchisiz?",
       { parse_mode: 'HTML', ...buildPeriodSelectionKeyboard() }
     );
   }
@@ -530,24 +551,24 @@ bot.action(/^interval_(.+)$/, async (ctx: any) => {
     state.intervalDescription = 'Har kuni';
     state.step = 'WAITING_TIME';
     setUserCreationState(userId, state);
-    await ctx.editMessageText("⏰ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
+    await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
   } else if (choice === 'haftalik') {
     state.intervalType = 'haftalik';
     state.intervalDescription = 'Har haftada';
     state.step = 'WAITING_TIME';
     setUserCreationState(userId, state);
-    await ctx.editMessageText("⏰ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
+    await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
   } else if (choice === 'oylik') {
     state.intervalType = 'oylik';
     state.intervalDescription = 'Har oyda 1 marta';
     state.step = 'WAITING_TIME';
     setUserCreationState(userId, state);
-    await ctx.editMessageText("⏰ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
+    await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
   } else if (choice === 'boshqa') {
     state.intervalType = 'custom';
     state.step = 'WAITING_CUSTOM_DAYS';
     setUserCreationState(userId, state);
-    await ctx.editMessageText("🔢 <b>Necha kunda 1 marta takrorlanishini xohlaysiz?</b>\n\nFaqat kunlar sonini kiriting (masalan: <code>3</code>, <code>5</code>, <code>20</code>):", { parse_mode: 'HTML' });
+    await ctx.editMessageText("🔢 ⚡️ <b>Necha kunda 1 marta takrorlanishini xohlaysiz?</b>\n\nFaqat kunlar sonini kiriting (masalan: <code>3</code>, <code>5</code>, <code>20</code>):", { parse_mode: 'HTML' });
   }
   await ctx.answerCbQuery();
 });
@@ -558,7 +579,15 @@ bot.on('text', async (ctx: any) => {
   const text = ctx.message.text.trim();
   const state = getUserCreationState(userId);
 
-  if (!state) return;
+  if (!state) {
+    if (!text.startsWith('/')) {
+      await ctx.reply(
+        "✨ <i>Tushunmadim. Yangi odat qo'shish uchun <b>✨ ➕ Yangi odat</b> tugmasini bosing yoki barcha odatlarni ko'rish uchun <b>📊 📋 Mening odatlarim</b> menyusini tanlang.</i>",
+        { parse_mode: 'HTML', ...mainMenuKeyboard }
+      );
+    }
+    return;
+  }
 
   if (state.step === 'WAITING_NAME') {
     state.name = text;
@@ -566,13 +595,13 @@ bot.on('text', async (ctx: any) => {
     setUserCreationState(userId, state);
 
     const keyboard = Markup.inlineKeyboard([
-      [Markup.button.callback('☀️ Har kuni', 'interval_kunlik')],
-      [Markup.button.callback('📆 Har haftada (7 kunda)', 'interval_haftalik')],
-      [Markup.button.callback('📅 Har oyda (1 marta)', 'interval_oylik')],
-      [Markup.button.callback('⚙️ Boshqa oralik (Kunlar bilan)', 'interval_boshqa')],
+      [Markup.button.callback('☀️ ⚡️ Har kuni', 'interval_kunlik')],
+      [Markup.button.callback('🗓 ⚡️ Har haftada (7 kunda)', 'interval_haftalik')],
+      [Markup.button.callback('🔮 ⚡️ Har oyda (1 marta)', 'interval_oylik')],
+      [Markup.button.callback('💎 ⚙️ Boshqa oraliq (Kunlar bilan)', 'interval_boshqa')],
     ]);
 
-    await ctx.reply(`Odat nomi: <b>${escapeHtml(text)}</b>\n\nEndi ushbu odatning takrorlanish oralig'ini tanlang:`, {
+    await ctx.reply(`📌 Odat nomi: <b>${escapeHtml(text)}</b>\n\nEndi ushbu odatning takrorlanish oralig'ini tanlang:`, {
       parse_mode: 'HTML',
       ...keyboard,
     });
@@ -589,7 +618,7 @@ bot.on('text', async (ctx: any) => {
     state.intervalDescription = `Har ${days} kunda`;
     state.step = 'WAITING_TIME';
     setUserCreationState(userId, state);
-    await ctx.reply("⏰ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
+    await ctx.reply("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
     return;
   }
 
@@ -627,10 +656,10 @@ bot.on('text', async (ctx: any) => {
     if (habit) {
       const intervalName = getPrettyIntervalName(habit);
       await ctx.reply(
-        `✅ <b>Yangi odat muvaffaqiyatli saqlandi!</b>\n\n` +
+        `🌟 ✅ <b>Yangi odat muvaffaqiyatli saqlandi!</b>\n\n` +
           `📌 <b>Nomi:</b> ${escapeHtml(habit.name)}\n` +
           `🔄 <b>Oraliq:</b> ${intervalName}\n` +
-          `⏰ <b>Vaqti:</b> Soat ${habit.targetTime} da\n` +
+          `⏰ <b>Vaqti:</b> Soat <code>${habit.targetTime}</code> da\n` +
           `📅 <b>Keyingi eslatma:</b> ${formatDateWithWeekday(habit.nextDueDate)}`,
         { parse_mode: 'HTML', ...mainMenuKeyboard }
       );

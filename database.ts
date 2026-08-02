@@ -381,14 +381,23 @@ export function getUserCreationState(userId: number): any {
 }
 
 /**
- * Sets user creation state in database
+ * Sets user creation state in database (creates user if not exists)
  */
 export function setUserCreationState(userId: number, state: any): void {
   const db = readDb();
-  const user = db.users.find((u) => u.id === userId);
-  if (user) {
+  let user = db.users.find((u) => u.id === userId);
+  if (!user) {
+    user = {
+      id: userId,
+      firstName: 'Foydalanuvchi',
+      notificationsEnabled: true,
+      habits: [],
+      creationState: state,
+    };
+    db.users.push(user);
+  } else {
     user.creationState = state;
-    writeDb(db);
   }
+  writeDb(db);
 }
 
