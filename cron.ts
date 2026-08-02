@@ -103,7 +103,7 @@ export function initReminderCron(bot: Telegraf<any>): void {
               );
 
               // Update lastNotifiedDueDate to prevent repeated notifications for this minute
-              updateHabit(user.id, habit.id, {
+              await updateHabit(user.id, habit.id, {
                 lastNotifiedDueDate: habitNotificationKey,
               });
 

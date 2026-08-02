@@ -4,19 +4,34 @@ import crypto from 'crypto';
 import { DatabaseData, User, Habit } from './types';
 import { getTursoClient } from './turso';
 
-const DB_PATH = path.join(process.cwd(), 'db.json');
+function getDbPath(): string {
+  if (process.env.VERCEL === '1') {
+    return path.join('/tmp', 'db.json');
+  }
+  return path.join(process.cwd(), 'db.json');
+}
 
 /**
  * Reads database contents from db.json file using native fs module.
  */
 function readDb(): DatabaseData {
+  const dbPath = getDbPath();
   try {
-    if (!fs.existsSync(DB_PATH)) {
-      const initialData: DatabaseData = { users: [] };
-      fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf-8');
+    if (!fs.existsSync(dbPath)) {
+      let initialData: DatabaseData = { users: [] };
+      const rootDbPath = path.join(process.cwd(), 'db.json');
+      if (fs.existsSync(rootDbPath)) {
+        try {
+          const raw = fs.readFileSync(rootDbPath, 'utf-8');
+          initialData = JSON.parse(raw);
+        } catch {
+          initialData = { users: [] };
+        }
+      }
+      fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2), 'utf-8');
       return initialData;
     }
-    const rawData = fs.readFileSync(DB_PATH, 'utf-8');
+    const rawData = fs.readFileSync(dbPath, 'utf-8');
     return JSON.parse(rawData) as DatabaseData;
   } catch (error) {
     console.error('db.json o\'qishda xatolik yuz berdi:', error);
@@ -28,8 +43,9 @@ function readDb(): DatabaseData {
  * Writes database data back to db.json file using native fs module.
  */
 function writeDb(data: DatabaseData): void {
+  const dbPath = getDbPath();
   try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
   } catch (error) {
     console.error('db.json ga yozishda xatolik yuz berdi:', error);
   }
@@ -150,7 +166,7 @@ export function getUser(userId: number): User | undefined {
 /**
  * Saves or updates user information in Turso SQL DB and local db.json.
  */
-export function saveUser(userData: { id: number; firstName: string }): User {
+export async function saveUser(userData: { id: number; firstName: string }): Promise<User> {
   const db = readDb();
   const existingUserIndex = db.users.findIndex((u) => u.id === userData.id);
 
@@ -173,11 +189,15 @@ export function saveUser(userData: { id: number; firstName: string }): User {
   // Turso SQL execution
   const client = getTursoClient();
   if (client) {
-    client.execute({
-      sql: `INSERT INTO users (id, first_name, notifications_enabled) VALUES (?, ?, 1)
-            ON CONFLICT(id) DO UPDATE SET first_name = excluded.first_name`,
-      args: [userData.id, userData.firstName],
-    }).catch((err: any) => console.error('Turso error:', err));
+    try {
+      await client.execute({
+        sql: `INSERT INTO users (id, first_name, notifications_enabled) VALUES (?, ?, 1)
+              ON CONFLICT(id) DO UPDATE SET first_name = excluded.first_name`,
+        args: [userData.id, userData.firstName],
+      });
+    } catch (err: any) {
+      console.error('Turso saveUser error:', err);
+    }
   }
 
   return user;
@@ -186,15 +206,21 @@ export function saveUser(userData: { id: number; firstName: string }): User {
 /**
  * Adds a new habit to Turso SQL DB and local db.json.
  */
-export function addHabit(
+export async function addHabit(
   userId: number,
   habitData: Omit<Habit, 'id'>
-): Habit | null {
+): Promise<Habit | null> {
   const db = readDb();
-  const user = db.users.find((u) => u.id === userId);
+  let user = db.users.find((u) => u.id === userId);
 
   if (!user) {
-    return null;
+    user = {
+      id: userId,
+      firstName: 'Foydalanuvchi',
+      notificationsEnabled: true,
+      habits: [],
+    };
+    db.users.push(user);
   }
 
   const newHabit: Habit = {
@@ -208,24 +234,34 @@ export function addHabit(
   // Turso SQL execution
   const client = getTursoClient();
   if (client) {
-    client.execute({
-      sql: `INSERT INTO habits (id, user_id, name, interval_type, custom_interval_days, interval_description, start_date, rest_days, target_time, last_completed_at, next_due_date, last_notified_due_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        newHabit.id,
-        userId,
-        newHabit.name,
-        newHabit.intervalType,
-        newHabit.customIntervalDays || null,
-        newHabit.intervalDescription || null,
-        newHabit.startDate || null,
-        JSON.stringify(newHabit.restDays || []),
-        newHabit.targetTime,
-        newHabit.lastCompletedAt || null,
-        newHabit.nextDueDate,
-        newHabit.lastNotifiedDueDate || null,
-      ],
-    }).catch((err: any) => console.error('Turso addHabit error:', err));
+    try {
+      await client.execute({
+        sql: `INSERT INTO users (id, first_name, notifications_enabled) VALUES (?, ?, 1)
+              ON CONFLICT(id) DO UPDATE SET first_name = excluded.first_name`,
+        args: [userId, 'Foydalanuvchi'],
+      });
+
+      await client.execute({
+        sql: `INSERT INTO habits (id, user_id, name, interval_type, custom_interval_days, interval_description, start_date, rest_days, target_time, last_completed_at, next_due_date, last_notified_due_date)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          newHabit.id,
+          userId,
+          newHabit.name,
+          newHabit.intervalType,
+          newHabit.customIntervalDays || null,
+          newHabit.intervalDescription || null,
+          newHabit.startDate || null,
+          JSON.stringify(newHabit.restDays || []),
+          newHabit.targetTime,
+          newHabit.lastCompletedAt || null,
+          newHabit.nextDueDate,
+          newHabit.lastNotifiedDueDate || null,
+        ],
+      });
+    } catch (err: any) {
+      console.error('Turso addHabit error:', err);
+    }
   }
 
   return newHabit;
@@ -242,7 +278,7 @@ export function getHabits(userId: number): Habit[] {
 /**
  * Deletes a specific habit from Turso SQL DB and local db.json.
  */
-export function deleteHabit(userId: number, habitId: string): boolean {
+export async function deleteHabit(userId: number, habitId: string): Promise<boolean> {
   const db = readDb();
   const user = db.users.find((u) => u.id === userId);
 
@@ -259,10 +295,14 @@ export function deleteHabit(userId: number, habitId: string): boolean {
     // Turso SQL execution
     const client = getTursoClient();
     if (client) {
-      client.execute({
-        sql: `DELETE FROM habits WHERE id = ? AND user_id = ?`,
-        args: [habitId, userId],
-      }).catch((err: any) => console.error('Turso deleteHabit error:', err));
+      try {
+        await client.execute({
+          sql: `DELETE FROM habits WHERE id = ? AND user_id = ?`,
+          args: [habitId, userId],
+        });
+      } catch (err: any) {
+        console.error('Turso deleteHabit error:', err);
+      }
     }
 
     return true;
@@ -274,7 +314,7 @@ export function deleteHabit(userId: number, habitId: string): boolean {
 /**
  * Toggles notification settings for a user in Turso SQL DB and local db.json.
  */
-export function toggleUserNotifications(userId: number): boolean {
+export async function toggleUserNotifications(userId: number): Promise<boolean> {
   const db = readDb();
   const user = db.users.find((u) => u.id === userId);
 
@@ -288,10 +328,14 @@ export function toggleUserNotifications(userId: number): boolean {
   // Turso SQL execution
   const client = getTursoClient();
   if (client) {
-    client.execute({
-      sql: `UPDATE users SET notifications_enabled = ? WHERE id = ?`,
-      args: [user.notificationsEnabled ? 1 : 0, userId],
-    }).catch((err: any) => console.error('Turso toggleUserNotifications error:', err));
+    try {
+      await client.execute({
+        sql: `UPDATE users SET notifications_enabled = ? WHERE id = ?`,
+        args: [user.notificationsEnabled ? 1 : 0, userId],
+      });
+    } catch (err: any) {
+      console.error('Turso toggleUserNotifications error:', err);
+    }
   }
 
   return user.notificationsEnabled;
@@ -300,7 +344,7 @@ export function toggleUserNotifications(userId: number): boolean {
 /**
  * Clears all habits for a user in Turso SQL DB and local db.json.
  */
-export function clearUserHabits(userId: number): boolean {
+export async function clearUserHabits(userId: number): Promise<boolean> {
   const db = readDb();
   const user = db.users.find((u) => u.id === userId);
 
@@ -314,10 +358,14 @@ export function clearUserHabits(userId: number): boolean {
   // Turso SQL execution
   const client = getTursoClient();
   if (client) {
-    client.execute({
-      sql: `DELETE FROM habits WHERE user_id = ?`,
-      args: [userId],
-    }).catch((err: any) => console.error('Turso clearUserHabits error:', err));
+    try {
+      await client.execute({
+        sql: `DELETE FROM habits WHERE user_id = ?`,
+        args: [userId],
+      });
+    } catch (err: any) {
+      console.error('Turso clearUserHabits error:', err);
+    }
   }
 
   return true;
@@ -326,11 +374,11 @@ export function clearUserHabits(userId: number): boolean {
 /**
  * Updates a habit in Turso SQL DB and local db.json.
  */
-export function updateHabit(
+export async function updateHabit(
   userId: number,
   habitId: string,
   updates: Partial<Omit<Habit, 'id'>>
-): Habit | null {
+): Promise<Habit | null> {
   const db = readDb();
   const user = db.users.find((u) => u.id === userId);
 
@@ -375,12 +423,14 @@ export function updateHabit(
 
     if (setClauses.length > 0) {
       args.push(habitId, userId);
-      client
-        .execute({
+      try {
+        await client.execute({
           sql: `UPDATE habits SET ${setClauses.join(', ')} WHERE id = ? AND user_id = ?`,
           args,
-        })
-        .catch((err: any) => console.error('Turso updateHabit error:', err));
+        });
+      } catch (err: any) {
+        console.error('Turso updateHabit error:', err);
+      }
     }
   }
 
@@ -392,11 +442,29 @@ const creationStateMap = new Map<number, any>();
 /**
  * Gets user creation state from database
  */
-export function getUserCreationState(userId: number): any {
+export async function getUserCreationState(userId: number): Promise<any> {
   const inMemoryState = creationStateMap.get(userId);
   if (inMemoryState !== undefined) {
     return inMemoryState;
   }
+
+  const client = getTursoClient();
+  if (client) {
+    try {
+      const result = await client.execute({
+        sql: `SELECT creation_state FROM users WHERE id = ?`,
+        args: [userId],
+      });
+      if (result.rows.length > 0 && result.rows[0].creation_state) {
+        const parsed = JSON.parse(String(result.rows[0].creation_state));
+        creationStateMap.set(userId, parsed);
+        return parsed;
+      }
+    } catch (err: any) {
+      console.error('Turso getUserCreationState error:', err);
+    }
+  }
+
   const db = readDb();
   const user = db.users.find((u) => u.id === userId);
   return user ? user.creationState || null : null;
@@ -405,7 +473,7 @@ export function getUserCreationState(userId: number): any {
 /**
  * Sets user creation state in database (creates user if not exists)
  */
-export function setUserCreationState(userId: number, state: any): void {
+export async function setUserCreationState(userId: number, state: any): Promise<void> {
   if (state === null || state === undefined) {
     creationStateMap.delete(userId);
   } else {
@@ -431,12 +499,14 @@ export function setUserCreationState(userId: number, state: any): void {
   // Sync state immediately to Turso cloud database for serverless persistence
   const client = getTursoClient();
   if (client) {
-    client
-      .execute({
+    try {
+      await client.execute({
         sql: `UPDATE users SET creation_state = ? WHERE id = ?`,
         args: [state ? JSON.stringify(state) : null, userId],
-      })
-      .catch((err: any) => console.error('Turso setUserCreationState error:', err));
+      });
+    } catch (err: any) {
+      console.error('Turso setUserCreationState error:', err);
+    }
   }
 }
 

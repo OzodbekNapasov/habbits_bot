@@ -74,13 +74,13 @@ const mainMenuKeyboard = Markup.keyboard([
 bot.command('start', async (ctx) => {
   const from = ctx.from;
   if (from) {
-    saveUser({
+    await saveUser({
       id: from.id,
       firstName: from.first_name || 'Foydalanuvchi',
     });
   }
 
-  setUserCreationState(ctx.from.id, null);
+  await setUserCreationState(ctx.from.id, null);
 
   const startMessage =
     `👑 <b>Salom, ${escapeHtml(ctx.from?.first_name || 'Foydalanuvchi')}!</b> ✨\n\n` +
@@ -200,8 +200,8 @@ async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean 
 
 // Bot Hears Commands & Keyboard Actions
 bot.hears(/(?:📊\s*)?📋\s*Mening odatlarim/, async (ctx: any) => {
-  saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
-  setUserCreationState(ctx.from.id, null);
+  await saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
+  await setUserCreationState(ctx.from.id, null);
   const userId = ctx.from.id;
   const habits = getHabits(userId);
 
@@ -216,16 +216,16 @@ bot.hears(/(?:📊\s*)?📋\s*Mening odatlarim/, async (ctx: any) => {
 });
 
 bot.hears(/(?:⚙️\s*)?Sozlamalar/, async (ctx: any) => {
-  saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
-  setUserCreationState(ctx.from.id, null);
+  await saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
+  await setUserCreationState(ctx.from.id, null);
   const userId = ctx.from.id;
   const { text, keyboard } = buildSettingsMessageAndKeyboard(userId, ctx.from.first_name || 'Foydalanuvchi');
   await ctx.reply(text, { parse_mode: 'HTML', ...keyboard });
 });
 
 bot.hears(/(?:💎\s*)?🌐\s*Mini App/, async (ctx: any) => {
-  saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
-  setUserCreationState(ctx.from.id, null);
+  await saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
+  await setUserCreationState(ctx.from.id, null);
   const miniAppUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://habbits-bot-seven.vercel.app/';
   const keyboard = Markup.inlineKeyboard([
     [Markup.button.webApp('🚀 💎 Mini App Dashboard', miniAppUrl)],
@@ -242,8 +242,8 @@ bot.command('digest', async (ctx: any) => {
 
 // Habit Creation Flow Handlers
 bot.hears(/(?:✨\s*)?➕\s*Yangi odat/, async (ctx: any) => {
-  saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
-  setUserCreationState(ctx.from.id, { step: 'WAITING_NAME' });
+  await saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
+  await setUserCreationState(ctx.from.id, { step: 'WAITING_NAME' });
   await ctx.reply(
     "✨ 📝 <b>Yangi odat nomini kiriting:</b>\n\nMasalan: <i>Mashg'ulot, Kitob o'qish, Sartaroshga borish</i>\n\n<i>Bekor qilish uchun /bekor buyrug'ini yuboring.</i>",
     { parse_mode: 'HTML' }
@@ -251,7 +251,7 @@ bot.hears(/(?:✨\s*)?➕\s*Yangi odat/, async (ctx: any) => {
 });
 
 bot.command('bekor', async (ctx: any) => {
-  setUserCreationState(ctx.from.id, null);
+  await setUserCreationState(ctx.from.id, null);
   await ctx.reply("❌ 🚫 Odat qo'shish bekor qilindi.", mainMenuKeyboard);
 });
 
@@ -439,7 +439,7 @@ bot.action(/^done_(.+)$/, async (ctx: any) => {
     habit.customIntervalDays
   );
 
-  updateHabit(userId, habitId, {
+  await updateHabit(userId, habitId, {
     lastCompletedAt: todayStr,
     nextDueDate,
   });
@@ -469,7 +469,7 @@ bot.action(/^skip_(.+)$/, async (ctx: any) => {
     habit.customIntervalDays
   );
 
-  updateHabit(userId, habitId, { nextDueDate });
+  await updateHabit(userId, habitId, { nextDueDate });
 
   await ctx.editMessageText('❌ 🚫 Bu safargi harakat qoldirildi.');
   await ctx.answerCbQuery("Harakat qoldirildi. ❌ 🚫");
@@ -490,7 +490,7 @@ bot.action(/^delay_(\d+)_(.+)$/, async (ctx: any) => {
   const now = new Date();
   const newTargetTime = addMinutesToTime(getCurrentTimeString(now), minutesToAdd);
 
-  updateHabit(userId, habitId, {
+  await updateHabit(userId, habitId, {
     targetTime: newTargetTime,
     lastNotifiedDueDate: undefined,
   });
@@ -504,7 +504,7 @@ bot.action(/^delay_(\d+)_(.+)$/, async (ctx: any) => {
 
 bot.action('toggle_notifications', async (ctx: any) => {
   const userId = ctx.from.id;
-  toggleUserNotifications(userId);
+  await toggleUserNotifications(userId);
   const { text, keyboard } = buildSettingsMessageAndKeyboard(userId, ctx.from.first_name || 'Foydalanuvchi');
   await ctx.editMessageText(text, { parse_mode: 'HTML', ...keyboard });
   await ctx.answerCbQuery("Eslatma sozlamalari yangilandi!");
@@ -521,7 +521,7 @@ bot.action('confirm_clear_all', async (ctx: any) => {
 
 bot.action('clear_all_habits', async (ctx: any) => {
   const userId = ctx.from.id;
-  clearUserHabits(userId);
+  await clearUserHabits(userId);
   await ctx.editMessageText("🔥 🗑 Barcha odatlaringiz muvaffaqiyatli o'chirildi.");
   await ctx.answerCbQuery("Barcha odatlar o'chirildi! 🔥 🗑");
 });
@@ -529,7 +529,7 @@ bot.action('clear_all_habits', async (ctx: any) => {
 // Interval Selection Callbacks for Habit Creation
 bot.action(/^interval_(.+)$/, async (ctx: any) => {
   const userId = ctx.from.id;
-  const state = getUserCreationState(userId);
+  const state = await getUserCreationState(userId);
   if (!state) return;
 
   const choice = ctx.match[1];
@@ -538,24 +538,24 @@ bot.action(/^interval_(.+)$/, async (ctx: any) => {
     state.intervalType = 'kunlik';
     state.intervalDescription = 'Har kuni';
     state.step = 'WAITING_TIME';
-    setUserCreationState(userId, state);
+    await setUserCreationState(userId, state);
     await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
   } else if (choice === 'haftalik') {
     state.intervalType = 'haftalik';
     state.intervalDescription = 'Har haftada';
     state.step = 'WAITING_TIME';
-    setUserCreationState(userId, state);
+    await setUserCreationState(userId, state);
     await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
   } else if (choice === 'oylik') {
     state.intervalType = 'oylik';
     state.intervalDescription = 'Har oyda 1 marta';
     state.step = 'WAITING_TIME';
-    setUserCreationState(userId, state);
+    await setUserCreationState(userId, state);
     await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
   } else if (choice === 'boshqa') {
     state.intervalType = 'custom';
     state.step = 'WAITING_CUSTOM_DAYS';
-    setUserCreationState(userId, state);
+    await setUserCreationState(userId, state);
     await ctx.editMessageText("🔢 ⚡️ <b>Necha kunda 1 marta takrorlanishini xohlaysiz?</b>\n\nFaqat kunlar sonini kiriting (masalan: <code>3</code>, <code>5</code>, <code>20</code>):", { parse_mode: 'HTML' });
   }
   await ctx.answerCbQuery();
@@ -565,7 +565,7 @@ bot.action(/^interval_(.+)$/, async (ctx: any) => {
 bot.on('text', async (ctx: any) => {
   const userId = ctx.from.id;
   const text = ctx.message.text.trim();
-  const state = getUserCreationState(userId);
+  const state = await getUserCreationState(userId);
 
   if (!state) {
     if (!text.startsWith('/')) {
@@ -580,7 +580,7 @@ bot.on('text', async (ctx: any) => {
   if (state.step === 'WAITING_NAME') {
     state.name = text;
     state.step = 'WAITING_INTERVAL';
-    setUserCreationState(userId, state);
+    await setUserCreationState(userId, state);
 
     const keyboard = Markup.inlineKeyboard([
       [Markup.button.callback('☀️ ⚡️ Har kuni', 'interval_kunlik')],
@@ -605,7 +605,7 @@ bot.on('text', async (ctx: any) => {
     state.customIntervalDays = days;
     state.intervalDescription = `Har ${days} kunda`;
     state.step = 'WAITING_TIME';
-    setUserCreationState(userId, state);
+    await setUserCreationState(userId, state);
     await ctx.reply("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
     return;
   }
@@ -626,7 +626,7 @@ bot.on('text', async (ctx: any) => {
       state.customIntervalDays
     );
 
-    const habit = addHabit(userId, {
+    const habit = await addHabit(userId, {
       name: state.name!,
       intervalType: state.intervalType!,
       customIntervalDays: state.customIntervalDays,
@@ -639,7 +639,7 @@ bot.on('text', async (ctx: any) => {
     });
 
     // Clear persistent creation state
-    setUserCreationState(userId, null);
+    await setUserCreationState(userId, null);
 
     if (habit) {
       const intervalName = getPrettyIntervalName(habit);
