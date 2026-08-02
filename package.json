@@ -1,0 +1,34 @@
+{
+  "name": "telegram-odatlar-bot",
+  "version": "1.0.0",
+  "description": "Uzbek Telegram Habit Tracker Bot built with grammY, TypeScript, and fs db.json",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "telegram",
+    "grammy",
+    "typescript",
+    "bot",
+    "habits",
+    "uzbek"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@grammyjs/conversations": "^1.2.0",
+    "@libsql/client": "^0.14.0",
+    "dotenv": "^16.4.5",
+    "grammy": "^1.35.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "@types/node-cron": "^3.0.11",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.3"
+  }
+}

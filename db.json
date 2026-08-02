@@ -1,0 +1,40 @@
+{
+  "users": [
+    {
+      "id": 8135594558,
+      "firstName": "Ozodbek",
+      "habits": [
+        {
+          "id": "2cf40ca5-2994-4b9e-9df6-cf164615c7ee",
+          "name": "Sartaroshga borish kerak.",
+          "intervalType": "custom",
+          "customIntervalDays": 20,
+          "intervalDescription": "Har 20 kunda",
+          "startDate": "2026-08-02",
+          "restDays": [],
+          "targetTime": "16:00",
+          "lastCompletedAt": null,
+          "nextDueDate": "2026-08-22"
+        },
+        {
+          "id": "b8ce91d0-23ff-485d-a789-695f780f3597",
+          "name": "Mashg'ulot",
+          "intervalType": "kunlik",
+          "intervalDescription": "Kunlik (Har kuni)",
+          "startDate": "2026-08-02",
+          "restDays": [
+            "Yakshanba"
+          ],
+          "targetTime": "20:00",
+          "lastCompletedAt": null,
+          "nextDueDate": "2026-08-03"
+        }
+      ]
+    },
+    {
+      "id": 5657200575,
+      "firstName": "O.Z.NAPASOV",
+      "habits": []
+    }
+  ]
+}
