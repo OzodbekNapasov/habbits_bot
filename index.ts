@@ -51,7 +51,7 @@ export type MyConversation = Conversation<MyContext>;
 // Load environment variables from .env file
 dotenv.config();
 
-const token = process.env.BOT_TOKEN || '8766054938:AAHPWyYnGxxEHLcY1j14tRCHtuDQ9YTCxEc';
+const token = process.env.BOT_TOKEN || '';
 
 // Initialize Telegram bot with grammY Context flavor
 const bot = new Bot<MyContext>(token);
