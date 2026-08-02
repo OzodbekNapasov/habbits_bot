@@ -58,7 +58,15 @@ export async function loadFromTurso(): Promise<void> {
       const id = Number(row.id);
       const firstName = String(row.first_name);
       const notificationsEnabled = row.notifications_enabled === 1 || row.notifications_enabled === true;
-      const creationState = creationStateMap.get(id) || existingStatesMap.get(id) || null;
+      
+      let creationState: any = creationStateMap.get(id) || existingStatesMap.get(id) || null;
+      if (row.creation_state) {
+        try {
+          creationState = JSON.parse(String(row.creation_state));
+        } catch {
+          // ignore
+        }
+      }
 
       usersMap.set(id, {
         id,
@@ -419,5 +427,16 @@ export function setUserCreationState(userId: number, state: any): void {
     user.creationState = state;
   }
   writeDb(db);
+
+  // Sync state immediately to Turso cloud database for serverless persistence
+  const client = getTursoClient();
+  if (client) {
+    client
+      .execute({
+        sql: `UPDATE users SET creation_state = ? WHERE id = ?`,
+        args: [state ? JSON.stringify(state) : null, userId],
+      })
+      .catch((err: any) => console.error('Turso setUserCreationState error:', err));
+  }
 }
 

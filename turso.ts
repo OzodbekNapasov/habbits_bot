@@ -40,9 +40,16 @@ export async function initTursoTables(): Promise<boolean> {
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY,
         first_name TEXT NOT NULL,
-        notifications_enabled INTEGER DEFAULT 1
+        notifications_enabled INTEGER DEFAULT 1,
+        creation_state TEXT
       );
     `);
+
+    try {
+      await tursoClient.execute(`ALTER TABLE users ADD COLUMN creation_state TEXT`);
+    } catch {
+      // Column may already exist
+    }
 
     await tursoClient.execute(`
       CREATE TABLE IF NOT EXISTS habits (
@@ -82,9 +89,14 @@ export async function syncLocalDbToTurso(): Promise<void> {
 
     for (const user of localUsers) {
       await tursoClient.execute({
-        sql: `INSERT INTO users (id, first_name, notifications_enabled) VALUES (?, ?, ?)
-              ON CONFLICT(id) DO UPDATE SET first_name = excluded.first_name, notifications_enabled = excluded.notifications_enabled`,
-        args: [user.id, user.firstName, user.notificationsEnabled !== false ? 1 : 0],
+        sql: `INSERT INTO users (id, first_name, notifications_enabled, creation_state) VALUES (?, ?, ?, ?)
+              ON CONFLICT(id) DO UPDATE SET first_name = excluded.first_name, notifications_enabled = excluded.notifications_enabled, creation_state = excluded.creation_state`,
+        args: [
+          user.id,
+          user.firstName,
+          user.notificationsEnabled !== false ? 1 : 0,
+          user.creationState ? JSON.stringify(user.creationState) : null,
+        ],
       });
 
       for (const habit of user.habits) {
