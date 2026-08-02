@@ -13,14 +13,14 @@ async function ensureInitialized() {
   }
 }
 
-const handleWebhook = webhookCallback(bot, 'std/http');
+const handleWebhook = webhookCallback(bot, 'express');
 
-export default async function handler(req: Request) {
+export default async function handler(req: any, res: any) {
   try {
     await ensureInitialized();
-    return await handleWebhook(req);
+    return await handleWebhook(req, res);
   } catch (err: any) {
     console.error('Vercel Webhook error:', err);
-    return new Response('Internal Server Error', { status: 500 });
+    res.status(500).send('Internal Server Error');
   }
 }
