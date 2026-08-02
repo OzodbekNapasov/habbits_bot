@@ -18,6 +18,7 @@ export interface User {
   id: number;
   firstName: string;
   notificationsEnabled?: boolean; // default true
+  creationState?: any;
   habits: Habit[];
 }
 

@@ -355,3 +355,25 @@ export function updateHabit(
 
   return habit;
 }
+
+/**
+ * Gets user creation state from database
+ */
+export function getUserCreationState(userId: number): any {
+  const db = readDb();
+  const user = db.users.find((u) => u.id === userId);
+  return user ? user.creationState || null : null;
+}
+
+/**
+ * Sets user creation state in database
+ */
+export function setUserCreationState(userId: number, state: any): void {
+  const db = readDb();
+  const user = db.users.find((u) => u.id === userId);
+  if (user) {
+    user.creationState = state;
+    writeDb(db);
+  }
+}
+
