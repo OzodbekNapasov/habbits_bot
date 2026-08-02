@@ -1,4 +1,3 @@
-import { webhookCallback } from 'grammy';
 import { bot } from '../index';
 import { initTursoTables } from '../turso';
 import { loadFromTurso } from '../database';
@@ -11,34 +10,29 @@ async function ensureInitialized() {
       await initTursoTables();
       await loadFromTurso();
     } catch (err) {
-      console.error('Database init error:', err);
+      console.error('Turso init error:', err);
     }
     isInitialized = true;
   }
 }
 
-const handleWebhook = webhookCallback(bot, 'express');
-
 export default async function handler(req: any, res: any) {
   // If request is GET (e.g. opened in browser), return friendly status page
   if (req.method === 'GET') {
-    return res.status(200).send('🤖 Telegram Odatlar Boti 24/7 muvaffaqiyatli ishlamoqda!');
+    return res.status(200).send('🤖 Telegram Odatlar Boti (Telegraf) 24/7 muvaffaqiyatli ishlamoqda!');
   }
 
-  // Parse string body if unparsed
-  if (typeof req.body === 'string') {
+  if (req.method === 'POST') {
     try {
-      req.body = JSON.parse(req.body);
-    } catch {
-      // ignore
+      await ensureInitialized();
+      await bot.handleUpdate(req.body, res);
+    } catch (err: any) {
+      console.error('Vercel bot execution error:', err);
+      if (!res.headersSent) {
+        res.status(200).send('OK');
+      }
     }
-  }
-
-  try {
-    await ensureInitialized();
-    return await handleWebhook(req, res);
-  } catch (err: any) {
-    console.error('Vercel Webhook error:', err);
-    return res.status(200).send('OK');
+  } else {
+    res.status(200).send('OK');
   }
 }
