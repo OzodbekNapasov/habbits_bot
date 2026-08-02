@@ -762,7 +762,8 @@ bot.hears('⚙️ Sozlamalar', async (ctx) => {
   const userId = ctx.from?.id;
   if (!userId) return;
 
-  const { text, keyboard } = buildSettingsMessageAndKeyboard(userId, ctx.from.first_name);
+  const firstName = ctx.from?.first_name || 'Foydalanuvchi';
+  const { text, keyboard } = buildSettingsMessageAndKeyboard(userId, firstName);
 
   await ctx.reply(text, {
     parse_mode: 'Markdown',
@@ -1025,9 +1026,10 @@ bot.callbackQuery('list_habits', async (ctx) => {
       reply_markup: undefined,
     });
   } else {
-    await ctx.editMessageText('Sizning odatlaringiz:', {
-      reply_markup: buildHabitsListKeyboard(userId),
-    });
+    await ctx.editMessageText(
+      "📋 *Odatlar va Rejalar bo'limi*\n\nQaysi davr uchun rejalashtirilgan odatlaringizni ko'rmoqchisiz?",
+      { parse_mode: 'Markdown', reply_markup: buildPeriodSelectionKeyboard() }
+    );
   }
 
   await ctx.answerCallbackQuery();

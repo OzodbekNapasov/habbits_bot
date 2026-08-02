@@ -161,7 +161,7 @@ export function saveUser(userData: { id: number; firstName: string }): User {
       sql: `INSERT INTO users (id, first_name, notifications_enabled) VALUES (?, ?, 1)
             ON CONFLICT(id) DO UPDATE SET first_name = excluded.first_name`,
       args: [userData.id, userData.firstName],
-    }).catch((err) => console.error('Turso saveUser error:', err));
+    }).catch((err: any) => console.error('Turso error:', err));
   }
 
   return user;
@@ -209,7 +209,7 @@ export function addHabit(
         newHabit.nextDueDate,
         newHabit.lastNotifiedDueDate || null,
       ],
-    }).catch((err) => console.error('Turso addHabit error:', err));
+    }).catch((err: any) => console.error('Turso addHabit error:', err));
   }
 
   return newHabit;
@@ -246,7 +246,7 @@ export function deleteHabit(userId: number, habitId: string): boolean {
       client.execute({
         sql: `DELETE FROM habits WHERE id = ? AND user_id = ?`,
         args: [habitId, userId],
-      }).catch((err) => console.error('Turso deleteHabit error:', err));
+      }).catch((err: any) => console.error('Turso deleteHabit error:', err));
     }
 
     return true;
@@ -275,7 +275,7 @@ export function toggleUserNotifications(userId: number): boolean {
     client.execute({
       sql: `UPDATE users SET notifications_enabled = ? WHERE id = ?`,
       args: [user.notificationsEnabled ? 1 : 0, userId],
-    }).catch((err) => console.error('Turso toggleUserNotifications error:', err));
+    }).catch((err: any) => console.error('Turso toggleUserNotifications error:', err));
   }
 
   return user.notificationsEnabled;
@@ -301,7 +301,7 @@ export function clearUserHabits(userId: number): boolean {
     client.execute({
       sql: `DELETE FROM habits WHERE user_id = ?`,
       args: [userId],
-    }).catch((err) => console.error('Turso clearUserHabits error:', err));
+    }).catch((err: any) => console.error('Turso clearUserHabits error:', err));
   }
 
   return true;
@@ -350,7 +350,7 @@ export function updateHabit(
         habitId,
         userId,
       ],
-    }).catch((err) => console.error('Turso updateHabit error:', err));
+    }).catch((err: any) => console.error('Turso updateHabit error:', err));
   }
 
   return habit;
