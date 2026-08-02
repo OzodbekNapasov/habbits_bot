@@ -64,6 +64,46 @@ export function isValidDateFormat(dateStr: string): boolean {
 }
 
 /**
+ * Parses DD.MM.YYYY or YYYY-MM-DD input into YYYY-MM-DD string format.
+ */
+export function parseUzbekDateToISO(dateStr: string): string | null {
+  if (!dateStr) return null;
+  const trimmed = dateStr.trim();
+
+  // Handle DD.MM.YYYY format (e.g., 03.08.2026)
+  const dotParts = trimmed.split('.');
+  if (dotParts.length === 3) {
+    const day = parseInt(dotParts[0], 10);
+    const month = parseInt(dotParts[1], 10);
+    const year = parseInt(dotParts[2], 10);
+    if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 2024 && year <= 2100) {
+      const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const d = new Date(`${iso}T00:00:00`);
+      if (!isNaN(d.getTime())) return iso;
+    }
+  }
+
+  // Handle YYYY-MM-DD format
+  if (isValidDateFormat(trimmed)) {
+    return trimmed;
+  }
+
+  return null;
+}
+
+/**
+ * Formats YYYY-MM-DD into DD.MM.YYYY format.
+ */
+export function formatISOToUzbekDate(isoDateStr: string): string {
+  if (!isoDateStr) return '';
+  const parts = isoDateStr.split(' ')[0].split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}.${parts[1]}.${parts[0]}`;
+  }
+  return isoDateStr;
+}
+
+/**
  * Formats a Date object as YYYY-MM-DD HH:mm string in +05:00 / local time.
  */
 export function formatDate(date: Date = new Date()): string {

@@ -18,6 +18,8 @@ import {
   getTodayDateString,
   getTomorrowDateString,
   isValidDateFormat,
+  parseUzbekDateToISO,
+  formatISOToUzbekDate,
   calculateNextDueDateFromStartDate,
   calculateNextDueDateAfterCompletion,
   isHabitForToday,
@@ -526,6 +528,38 @@ bot.action('clear_all_habits', async (ctx: any) => {
   await ctx.answerCbQuery("Barcha odatlar o'chirildi! 🔥 🗑");
 });
 
+/**
+ * Helper to build Rest Days Selection Inline Keyboard
+ */
+function buildRestDaysKeyboard(selectedDays: string[] = []) {
+  const days = [
+    { code: 'Du', label: 'Dushanba' },
+    { code: 'Se', label: 'Sechanba' },
+    { code: 'Ch', label: 'Chorshanba' },
+    { code: 'Pa', label: 'Payshanba' },
+    { code: 'Ju', label: 'Juma' },
+    { code: 'Sh', label: 'Shanba' },
+    { code: 'Ya', label: 'Yakshanba' },
+  ];
+
+  const row1 = days.slice(0, 4).map((d) => {
+    const isSelected = selectedDays.includes(d.code);
+    return Markup.button.callback(`${isSelected ? '✅' : '▫️'} ${d.code}`, `toggle_rest_${d.code}`);
+  });
+
+  const row2 = days.slice(4, 7).map((d) => {
+    const isSelected = selectedDays.includes(d.code);
+    return Markup.button.callback(`${isSelected ? '✅' : '▫️'} ${d.code}`, `toggle_rest_${d.code}`);
+  });
+
+  return Markup.inlineKeyboard([
+    row1,
+    row2,
+    [Markup.button.callback('⚡️ Tanaffussiz (Har kuni)', 'rest_none')],
+    [Markup.button.callback('➡️ Keyingi (Vaqtni kiriting)', 'rest_done')],
+  ]);
+}
+
 // Interval Selection Callbacks for Habit Creation
 bot.action(/^interval_(.+)$/, async (ctx: any) => {
   const userId = ctx.from.id;
@@ -537,29 +571,207 @@ bot.action(/^interval_(.+)$/, async (ctx: any) => {
   if (choice === 'kunlik') {
     state.intervalType = 'kunlik';
     state.intervalDescription = 'Har kuni';
-    state.step = 'WAITING_TIME';
+    state.restDays = [];
+    state.step = 'WAITING_REST_DAYS';
     await setUserCreationState(userId, state);
-    await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
+    await ctx.editMessageText(
+      "🏖 👑 <b>Tanaffus (dam olish) kunlarini tanlang:</b>\n\nQaysi haftaning kunlarida eslatma yuborilmasligini xohlaysiz?\n\nTanlangan kunlar: <b>Yo'q (Tanaffussiz)</b>",
+      { parse_mode: 'HTML', ...buildRestDaysKeyboard([]) }
+    );
   } else if (choice === 'haftalik') {
     state.intervalType = 'haftalik';
     state.intervalDescription = 'Har haftada';
+    state.restDays = [];
     state.step = 'WAITING_TIME';
     await setUserCreationState(userId, state);
     await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
   } else if (choice === 'oylik') {
     state.intervalType = 'oylik';
     state.intervalDescription = 'Har oyda 1 marta';
+    state.restDays = [];
     state.step = 'WAITING_TIME';
     await setUserCreationState(userId, state);
     await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
   } else if (choice === 'boshqa') {
     state.intervalType = 'custom';
+    state.restDays = [];
     state.step = 'WAITING_CUSTOM_DAYS';
     await setUserCreationState(userId, state);
     await ctx.editMessageText("🔢 ⚡️ <b>Necha kunda 1 marta takrorlanishini xohlaysiz?</b>\n\nFaqat kunlar sonini kiriting (masalan: <code>3</code>, <code>5</code>, <code>20</code>):", { parse_mode: 'HTML' });
   }
   await ctx.answerCbQuery();
 });
+
+// Rest Days Selection Callbacks
+bot.action(/^toggle_rest_(.+)$/, async (ctx: any) => {
+  const dayCode = ctx.match[1];
+  const userId = ctx.from.id;
+  const state = await getUserCreationState(userId);
+  if (!state) return;
+
+  state.restDays = state.restDays || [];
+  if (state.restDays.includes(dayCode)) {
+    state.restDays = state.restDays.filter((d: string) => d !== dayCode);
+  } else {
+    state.restDays.push(dayCode);
+  }
+
+  await setUserCreationState(userId, state);
+
+  const selectedText = state.restDays.length > 0 ? state.restDays.join(', ') : "Yo'q (Tanaffussiz)";
+  const message = `🏖 👑 <b>Tanaffus (dam olish) kunlarini tanlang:</b>\n\nTanlangan tanaffus kunlari: <b>${selectedText}</b>\n\n<i>Kerakli kunlarni bosing va <b>➡️ Keyingi</b> tugmasini bosing:</i>`;
+
+  await ctx.editMessageText(message, {
+    parse_mode: 'HTML',
+    ...buildRestDaysKeyboard(state.restDays),
+  });
+  await ctx.answerCbQuery();
+});
+
+bot.action('rest_none', async (ctx: any) => {
+  const userId = ctx.from.id;
+  const state = await getUserCreationState(userId);
+  if (!state) return;
+
+  state.restDays = [];
+  state.step = 'WAITING_TIME';
+  await setUserCreationState(userId, state);
+
+  await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
+  await ctx.answerCbQuery("Tanaffussiz tanlandi!");
+});
+
+bot.action('rest_done', async (ctx: any) => {
+  const userId = ctx.from.id;
+  const state = await getUserCreationState(userId);
+  if (!state) return;
+
+  state.step = 'WAITING_TIME';
+  await setUserCreationState(userId, state);
+
+  await ctx.editMessageText("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
+  await ctx.answerCbQuery();
+});
+
+// Multi-step Habit Registration via Text Input using Persistent DB State
+bot.on('text', async (ctx: any) => {
+  const userId = ctx.from.id;
+  const text = ctx.message.text.trim();
+  const state = await getUserCreationState(userId);
+
+  if (!state) {
+    if (!text.startsWith('/')) {
+      await ctx.reply(
+        "✨ <i>Tushunmadim. Yangi odat qo'shish uchun <b>✨ ➕ Yangi odat</b> tugmasini bosing yoki barcha odatlarni ko'rish uchun <b>📊 📋 Mening odatlarim</b> menyusini tanlang.</i>",
+        { parse_mode: 'HTML', ...mainMenuKeyboard }
+      );
+    }
+    return;
+  }
+
+  if (state.step === 'WAITING_NAME') {
+    state.name = text;
+    state.step = 'WAITING_INTERVAL';
+    await setUserCreationState(userId, state);
+
+    const keyboard = Markup.inlineKeyboard([
+      [Markup.button.callback('☀️ ⚡️ Har kuni', 'interval_kunlik')],
+      [Markup.button.callback('🗓 ⚡️ Har haftada (7 kunda)', 'interval_haftalik')],
+      [Markup.button.callback('🔮 ⚡️ Har oyda (1 marta)', 'interval_oylik')],
+      [Markup.button.callback('💎 ⚙️ Boshqa oraliq (Kunlar bilan)', 'interval_boshqa')],
+    ]);
+
+    await ctx.reply(`📌 Odat nomi: <b>${escapeHtml(text)}</b>\n\nEndi ushbu odatning takrorlanish oralig'ini tanlang:`, {
+      parse_mode: 'HTML',
+      ...keyboard,
+    });
+    return;
+  }
+
+  if (state.step === 'WAITING_CUSTOM_DAYS') {
+    const days = parseInt(text, 10);
+    if (isNaN(days) || days <= 0) {
+      await ctx.reply("⚠️ Iltimos, faqat musbat son kiriting (masalan: 3, 5, 20):");
+      return;
+    }
+    state.customIntervalDays = days;
+    state.intervalDescription = `Har ${days} kunda`;
+    state.step = 'WAITING_TIME';
+    await setUserCreationState(userId, state);
+    await ctx.reply("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
+    return;
+  }
+
+// Start Date Selection Callbacks
+bot.action('start_date_today', async (ctx: any) => {
+  const userId = ctx.from.id;
+  const state = await getUserCreationState(userId);
+  if (!state) return;
+
+  const startDate = getTodayDateString();
+  await finalizeHabitCreation(ctx, userId, state, startDate);
+  await ctx.answerCbQuery();
+});
+
+bot.action('start_date_tomorrow', async (ctx: any) => {
+  const userId = ctx.from.id;
+  const state = await getUserCreationState(userId);
+  if (!state) return;
+
+  const startDate = getTomorrowDateString();
+  await finalizeHabitCreation(ctx, userId, state, startDate);
+  await ctx.answerCbQuery();
+});
+
+/**
+ * Finalizes habit creation and sends confirmation message
+ */
+async function finalizeHabitCreation(ctx: any, userId: number, state: any, startDate: string) {
+  const nextDueDate = calculateNextDueDateFromStartDate(
+    startDate,
+    state.targetTime!,
+    state.intervalType!,
+    state.restDays,
+    state.customIntervalDays
+  );
+
+  const habit = await addHabit(userId, {
+    name: state.name!,
+    intervalType: state.intervalType!,
+    customIntervalDays: state.customIntervalDays,
+    intervalDescription: state.intervalDescription,
+    startDate: startDate,
+    restDays: state.restDays || [],
+    targetTime: state.targetTime!,
+    lastCompletedAt: null,
+    nextDueDate,
+  });
+
+  // Clear persistent creation state
+  await setUserCreationState(userId, null);
+
+  if (habit) {
+    const intervalName = getPrettyIntervalName(habit);
+    const restDaysText = habit.restDays && habit.restDays.length > 0 ? habit.restDays.join(', ') : "Yo'q (Tanaffussiz)";
+    const startDateUz = formatISOToUzbekDate(startDate);
+    const message =
+      `🌟 ✅ <b>Yangi odat muvaffaqiyatli saqlandi!</b>\n\n` +
+      `📌 <b>Nomi:</b> ${escapeHtml(habit.name)}\n` +
+      `🔄 <b>Oraliq:</b> ${intervalName}\n` +
+      `🏖 <b>Tanaffus kunlari:</b> ${restDaysText}\n` +
+      `📅 <b>Boshlanish kuni:</b> <code>${startDateUz}</code>\n` +
+      `⏰ <b>Vaqti:</b> Soat <code>${habit.targetTime}</code> da\n` +
+      `📅 <b>Keyingi eslatma:</b> ${formatDateWithWeekday(habit.nextDueDate)}`;
+
+    if (ctx.callbackQuery) {
+      await ctx.editMessageText(message, { parse_mode: 'HTML' });
+    } else {
+      await ctx.reply(message, { parse_mode: 'HTML', ...mainMenuKeyboard });
+    }
+  } else {
+    await ctx.reply("❌ Odatni saqlashda xatolik yuz berdi.", mainMenuKeyboard);
+  }
+}
 
 // Multi-step Habit Registration via Text Input using Persistent DB State
 bot.on('text', async (ctx: any) => {
@@ -616,44 +828,37 @@ bot.on('text', async (ctx: any) => {
       return;
     }
     state.targetTime = text;
+    state.step = 'WAITING_START_DATE';
+    await setUserCreationState(userId, state);
 
-    const startDate = getTodayDateString();
-    const nextDueDate = calculateNextDueDateFromStartDate(
-      startDate,
-      state.targetTime!,
-      state.intervalType!,
-      state.restDays,
-      state.customIntervalDays
+    const todayStr = getTodayDateString();
+    const tomorrowStr = getTomorrowDateString();
+    const todayUz = formatISOToUzbekDate(todayStr);
+    const tomorrowUz = formatISOToUzbekDate(tomorrowStr);
+
+    const keyboard = Markup.inlineKeyboard([
+      [Markup.button.callback(`⚡️ Bugundan boshlash (${todayUz})`, 'start_date_today')],
+      [Markup.button.callback(`🌅 Ertagadan boshlash (${tomorrowUz})`, 'start_date_tomorrow')],
+    ]);
+
+    await ctx.reply(
+      `📅 👑 <b>Odat qaysi kundan boshlanishini kiriting (DD.MM.YYYY formatida):</b>\n\n` +
+        `Masalan: <code>${tomorrowUz}</code> yoki pastdagi tayyor tugmalardan birini bosing:`,
+      { parse_mode: 'HTML', ...keyboard }
     );
+    return;
+  }
 
-    const habit = await addHabit(userId, {
-      name: state.name!,
-      intervalType: state.intervalType!,
-      customIntervalDays: state.customIntervalDays,
-      intervalDescription: state.intervalDescription,
-      startDate: startDate,
-      restDays: state.restDays || [],
-      targetTime: state.targetTime!,
-      lastCompletedAt: null,
-      nextDueDate,
-    });
-
-    // Clear persistent creation state
-    await setUserCreationState(userId, null);
-
-    if (habit) {
-      const intervalName = getPrettyIntervalName(habit);
+  if (state.step === 'WAITING_START_DATE') {
+    const isoDate = parseUzbekDateToISO(text);
+    if (!isoDate) {
       await ctx.reply(
-        `🌟 ✅ <b>Yangi odat muvaffaqiyatli saqlandi!</b>\n\n` +
-          `📌 <b>Nomi:</b> ${escapeHtml(habit.name)}\n` +
-          `🔄 <b>Oraliq:</b> ${intervalName}\n` +
-          `⏰ <b>Vaqti:</b> Soat <code>${habit.targetTime}</code> da\n` +
-          `📅 <b>Keyingi eslatma:</b> ${formatDateWithWeekday(habit.nextDueDate)}`,
-        { parse_mode: 'HTML', ...mainMenuKeyboard }
+        "⚠️ Noto'g'ri sana formati. Iltimos, sanani <b>DD.MM.YYYY</b> formatida kiriting (masalan: <code>03.08.2026</code>):",
+        { parse_mode: 'HTML' }
       );
-    } else {
-      await ctx.reply("❌ Odatni saqlashda xatolik yuz berdi.", mainMenuKeyboard);
+      return;
     }
+    await finalizeHabitCreation(ctx, userId, state, isoDate);
     return;
   }
 });
