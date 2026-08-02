@@ -375,21 +375,22 @@ export function calculateNextDueDateFromStartDate(
   const day = parseInt(dayStr, 10);
 
   let candidate = new Date(year, month, day, targetHour, targetMinute, 0);
+  const now = new Date();
 
-  if (intervalType === 'kunlik') {
-    const now = new Date();
-    if (candidate.getTime() <= now.getTime()) {
+  // If candidate target time has already passed, schedule for next cycle
+  if (candidate.getTime() <= now.getTime()) {
+    if (intervalType === 'kunlik') {
       candidate.setDate(candidate.getDate() + 1);
+    } else if (intervalType === 'haftalik') {
+      candidate.setDate(candidate.getDate() + 7);
+    } else if (intervalType === '2_haftalik') {
+      candidate.setDate(candidate.getDate() + 14);
+    } else if (intervalType === 'oylik') {
+      candidate.setMonth(candidate.getMonth() + 1);
+    } else if (intervalType === 'custom') {
+      const daysToAdd = customIntervalDays && customIntervalDays > 0 ? customIntervalDays : 1;
+      candidate.setDate(candidate.getDate() + daysToAdd);
     }
-  } else if (intervalType === 'haftalik') {
-    candidate.setDate(candidate.getDate() + 7);
-  } else if (intervalType === '2_haftalik') {
-    candidate.setDate(candidate.getDate() + 14);
-  } else if (intervalType === 'oylik') {
-    candidate.setMonth(candidate.getMonth() + 1);
-  } else if (intervalType === 'custom') {
-    const daysToAdd = customIntervalDays && customIntervalDays > 0 ? customIntervalDays : 1;
-    candidate.setDate(candidate.getDate() + daysToAdd);
   }
 
   candidate = adjustDateForRestDays(candidate, restDays);

@@ -30,6 +30,8 @@ import {
   isHabitScheduledOnDate,
   getPrettyIntervalName,
   escapeHtml,
+  addMinutesToTime,
+  getCurrentTimeString,
 } from './utils';
 import { IntervalType } from './types';
 import { initReminderCron, triggerDailyDigest } from './cron';
@@ -464,6 +466,33 @@ bot.action(/^skip_(.+)$/, async (ctx: any) => {
   await ctx.answerCbQuery("Harakat qoldirildi. ❌");
 });
 
+bot.action(/^delay_(\d+)_(.+)$/, async (ctx: any) => {
+  const minutesToAdd = parseInt(ctx.match[1], 10);
+  const habitId = ctx.match[2];
+  const userId = ctx.from.id;
+  const habitInfo = findHabitById(habitId);
+
+  if (!habitInfo) {
+    await ctx.answerCbQuery("Odat topilmadi!");
+    return;
+  }
+
+  const { habit } = habitInfo;
+  const now = new Date();
+  const newTargetTime = addMinutesToTime(getCurrentTimeString(now), minutesToAdd);
+
+  updateHabit(userId, habitId, {
+    targetTime: newTargetTime,
+    lastNotifiedDueDate: undefined,
+  });
+
+  await ctx.editMessageText(
+    `⏱ <b>${escapeHtml(habit.name)}</b> odati eslatmasi <b>${minutesToAdd} minutga</b> surildi.\n\nYangi eslatma vaqti: <b>${newTargetTime}</b>`,
+    { parse_mode: 'HTML' }
+  );
+  await ctx.answerCbQuery(`${minutesToAdd} minutga surildi! ⏱`);
+});
+
 bot.action('toggle_notifications', async (ctx: any) => {
   const userId = ctx.from.id;
   toggleUserNotifications(userId);
@@ -573,9 +602,9 @@ bot.on('text', async (ctx: any) => {
 
     const startDate = getTodayDateString();
     const nextDueDate = calculateNextDueDateFromStartDate(
-      state.intervalType!,
-      state.targetTime!,
       startDate,
+      state.targetTime!,
+      state.intervalType!,
       state.restDays,
       state.customIntervalDays
     );

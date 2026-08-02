@@ -333,24 +333,39 @@ export function updateHabit(
   // Turso SQL execution
   const client = getTursoClient();
   if (client) {
-    client.execute({
-      sql: `UPDATE habits SET
-              name = COALESCE(?, name),
-              target_time = COALESCE(?, target_time),
-              last_completed_at = COALESCE(?, last_completed_at),
-              next_due_date = COALESCE(?, next_due_date),
-              last_notified_due_date = COALESCE(?, last_notified_due_date)
-            WHERE id = ? AND user_id = ?`,
-      args: [
-        updates.name || null,
-        updates.targetTime || null,
-        updates.lastCompletedAt || null,
-        updates.nextDueDate || null,
-        updates.lastNotifiedDueDate || null,
-        habitId,
-        userId,
-      ],
-    }).catch((err: any) => console.error('Turso updateHabit error:', err));
+    const setClauses: string[] = [];
+    const args: any[] = [];
+
+    if (updates.name !== undefined) {
+      setClauses.push('name = ?');
+      args.push(updates.name);
+    }
+    if (updates.targetTime !== undefined) {
+      setClauses.push('target_time = ?');
+      args.push(updates.targetTime);
+    }
+    if (updates.lastCompletedAt !== undefined) {
+      setClauses.push('last_completed_at = ?');
+      args.push(updates.lastCompletedAt || null);
+    }
+    if (updates.nextDueDate !== undefined) {
+      setClauses.push('next_due_date = ?');
+      args.push(updates.nextDueDate);
+    }
+    if (updates.lastNotifiedDueDate !== undefined) {
+      setClauses.push('last_notified_due_date = ?');
+      args.push(updates.lastNotifiedDueDate || null);
+    }
+
+    if (setClauses.length > 0) {
+      args.push(habitId, userId);
+      client
+        .execute({
+          sql: `UPDATE habits SET ${setClauses.join(', ')} WHERE id = ? AND user_id = ?`,
+          args,
+        })
+        .catch((err: any) => console.error('Turso updateHabit error:', err));
+    }
   }
 
   return habit;
