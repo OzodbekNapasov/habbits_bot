@@ -8,11 +8,13 @@ let isInitialized = false;
 
 async function ensureInitialized() {
   if (!isInitialized) {
-    try {
-      await initTursoTables();
-      await loadFromTurso();
-    } catch (err) {
-      console.error('Turso init error:', err);
+    const dbPath = process.env.VERCEL === '1' ? path.join('/tmp', 'db.json') : path.join(process.cwd(), 'db.json');
+    if (!fs.existsSync(dbPath)) {
+      try {
+        await loadFromTurso();
+      } catch (err) {
+        console.error('Turso load error:', err);
+      }
     }
     isInitialized = true;
   }
