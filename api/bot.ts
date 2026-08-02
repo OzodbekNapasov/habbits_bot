@@ -25,6 +25,15 @@ export default async function handler(req: any, res: any) {
     return res.status(200).send('🤖 Telegram Odatlar Boti 24/7 muvaffaqiyatli ishlamoqda!');
   }
 
+  // Parse string body if unparsed
+  if (typeof req.body === 'string') {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch {
+      // ignore
+    }
+  }
+
   try {
     await ensureInitialized();
     return await handleWebhook(req, res);

@@ -1052,17 +1052,14 @@ bot.catch((err) => {
   console.error(`Bot xatoligi yuz berdi:`, err.error);
 });
 
-import { loadFromTurso } from './database';
-import { initTursoTables } from './turso';
-
-// Initialize Turso tables and load cloud database data
-initTursoTables().then(() => {
-  loadFromTurso();
-});
-
 export { bot };
 
 if (process.env.VERCEL !== '1') {
+  // Initialize Turso tables and load cloud database data
+  initTursoTables().then(() => {
+    loadFromTurso();
+  });
+
   // Initialize 1-minute reminder and dayjest cron jobs
   initReminderCron(bot);
 
