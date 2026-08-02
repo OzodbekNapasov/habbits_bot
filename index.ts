@@ -61,7 +61,7 @@ const ALLOWED_USER_ID = Number(process.env.ALLOWED_USER_ID || 8135594558);
 // Access control middleware: Only allow execution for ALLOWED_USER_ID (8135594558)
 bot.use(async (ctx, next) => {
   const fromId = ctx.from?.id;
-  if (!fromId || fromId !== ALLOWED_USER_ID) {
+  if (!fromId || Number(fromId) !== Number(ALLOWED_USER_ID)) {
     if (ctx.callbackQuery) {
       try {
         await ctx.answerCallbackQuery({
@@ -73,8 +73,8 @@ bot.use(async (ctx, next) => {
       }
     } else {
       await ctx.reply(
-        "⚠️ *Kechirasiz, ushbu bot shaxsiy va faqat ruxsat berilgan foydalanuvchi (ID: 8135594558) uchun mo'ljallangan.*",
-        { parse_mode: 'Markdown' }
+        "⚠️ <b>Kechirasiz, ushbu bot shaxsiy va faqat ruxsat berilgan foydalanuvchi uchun mo'ljallangan.</b>",
+        { parse_mode: 'HTML' }
       );
     }
     return; // Block execution for unauthorized users
