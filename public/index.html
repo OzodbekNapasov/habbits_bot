@@ -242,11 +242,19 @@
       flex-direction: column;
       align-items: center;
       gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .day-cell:active {
+      transform: scale(0.92);
     }
 
     .day-cell.active {
       background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
     }
 
     .day-name {
@@ -256,11 +264,16 @@
       text-transform: uppercase;
     }
 
+    .day-cell.active .day-name {
+      color: #fff;
+    }
+
     .day-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.15);
+      transition: all 0.2s ease;
     }
 
     .day-dot.completed {
@@ -468,6 +481,32 @@
     .badge-completed svg {
       stroke: var(--success-color);
       fill: none;
+    }
+
+    .status-scheduled {
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.18);
+      color: #8b5cf6;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-missed {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .empty-state {
@@ -804,13 +843,13 @@
 
     <!-- 7-Day Activity Grid (Du - Ya) -->
     <div class="calendar-grid">
-      <div class="day-cell" id="day-0"><span class="day-name">Du</span><div class="day-dot"></div></div>
-      <div class="day-cell" id="day-1"><span class="day-name">Se</span><div class="day-dot"></div></div>
-      <div class="day-cell" id="day-2"><span class="day-name">Ch</span><div class="day-dot"></div></div>
-      <div class="day-cell" id="day-3"><span class="day-name">Pa</span><div class="day-dot"></div></div>
-      <div class="day-cell" id="day-4"><span class="day-name">Ju</span><div class="day-dot"></div></div>
-      <div class="day-cell" id="day-5"><span class="day-name">Sh</span><div class="day-dot"></div></div>
-      <div class="day-cell" id="day-6"><span class="day-name">Ya</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-0" onclick="selectWeekday(0)"><span class="day-name">Du</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-1" onclick="selectWeekday(1)"><span class="day-name">Se</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-2" onclick="selectWeekday(2)"><span class="day-name">Ch</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-3" onclick="selectWeekday(3)"><span class="day-name">Pa</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-4" onclick="selectWeekday(4)"><span class="day-name">Ju</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-5" onclick="selectWeekday(5)"><span class="day-name">Sh</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-6" onclick="selectWeekday(6)"><span class="day-name">Ya</span><div class="day-dot"></div></div>
     </div>
   </div>
 
@@ -896,13 +935,13 @@
       <div class="form-group">
         <label class="form-label">Tanaffus kunlari (Tugmachalarni bosing)</label>
         <div class="chip-grid" id="restDaysContainer">
-          <div class="chip" data-day="Du">Du</div>
-          <div class="chip" data-day="Se">Se</div>
-          <div class="chip" data-day="Ch">Ch</div>
-          <div class="chip" data-day="Pa">Pa</div>
-          <div class="chip" data-day="Ju">Ju</div>
-          <div class="chip" data-day="Sh">Sh</div>
-          <div class="chip" data-day="Ya">Ya</div>
+          <div class="chip" data-day="Dushanba">Du</div>
+          <div class="chip" data-day="Seshanba">Se</div>
+          <div class="chip" data-day="Chorshanba">Ch</div>
+          <div class="chip" data-day="Payshanba">Pa</div>
+          <div class="chip" data-day="Juma">Ju</div>
+          <div class="chip" data-day="Shanba">Sh</div>
+          <div class="chip" data-day="Yakshanba">Ya</div>
         </div>
       </div>
 
@@ -965,6 +1004,17 @@
     let currentFilter = 'today';
     let habitsCache = [];
 
+    // Weekdays Mapping to Uzbekistan Dates
+    const WEEKDAYS_MAP = {
+      1: 'Dushanba',
+      2: 'Seshanba',
+      3: 'Chorshanba',
+      4: 'Payshanba',
+      5: 'Juma',
+      6: 'Shanba',
+      0: 'Yakshanba',
+    };
+
     // Helper to calculate Uzbekistan local ISO date strings (Asia/Tashkent offset +05:00)
     function getUzbekistanDateString(date = new Date()) {
       const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -979,6 +1029,30 @@
     // Pre-fill Start Date form input with Uzbekistan Local Date
     document.getElementById('habitStartDateInput').value = getUzbekistanDateString();
 
+    // Helper to calculate date strings for Dushanba-Yakshanba of current week
+    function getWeekDates() {
+      const today = new Date();
+      const todayStr = getUzbekistanDateString(today);
+      const todayLocal = new Date(`${todayStr}T00:00:00`);
+      
+      const currentDay = todayLocal.getDay(); // 0 is Sun, 1 is Mon...
+      // Distance to Monday (index 1). If Sun (0), distance is -6 days.
+      const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+      
+      const monday = new Date(todayLocal);
+      monday.setDate(monday.getDate() + distanceToMonday);
+      
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        dates.push(getUzbekistanDateString(d));
+      }
+      return dates; // YYYY-MM-DD for indices 0-6 (Du-Ya)
+    }
+
+    const weekDates = getWeekDates();
+
     // Set Active State to Current Day in Calendar Header
     const currentDayUz = new Date().getDay(); // 0 is Sunday, 1 is Monday...
     const uzDayIndex = currentDayUz === 0 ? 6 : currentDayUz - 1; // Map to 0-6 (Du-Ya)
@@ -987,24 +1061,33 @@
       activeCell.classList.add('active');
     }
 
-    // Toggle Chip activation in Rest Days form
-    const restDayChips = document.querySelectorAll('#restDaysContainer .chip');
-    restDayChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chip.classList.toggle('active');
-      });
-    });
-
     // Bind Event Handlers to Filter Tabs
     const tabButtons = document.querySelectorAll('#filterTabs .tab-btn');
     tabButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
         tabButtons.forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
+        
+        // Remove active class from calendar days
+        document.querySelectorAll('.calendar-grid .day-cell').forEach(c => c.classList.remove('active'));
+        
         currentFilter = btn.getAttribute('data-filter');
         renderHabits();
       });
     });
+
+    // Calendar Weekday click trigger selection
+    function selectWeekday(index) {
+      // Remove active class from all filter tabs
+      document.querySelectorAll('#filterTabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+      
+      // Remove active class from all day cells, set on clicked
+      document.querySelectorAll('.calendar-grid .day-cell').forEach(c => c.classList.remove('active'));
+      document.getElementById(`day-${index}`).classList.add('active');
+      
+      currentFilter = `day-${index}`;
+      renderHabits();
+    }
 
     // Bottom Sheet management
     function toggleSheet(sheetId, show) {
@@ -1038,6 +1121,57 @@
         customGroup.style.display = 'flex';
       } else {
         customGroup.style.display = 'none';
+      }
+    }
+
+    // Ported isHabitScheduledOnDate logic from utils.ts to client JS
+    function isHabitScheduledOnDate(habit, targetDateStr) {
+      const targetClean = targetDateStr.trim().split(' ')[0];
+      const targetDate = new Date(`${targetClean}T00:00:00`);
+      if (isNaN(targetDate.getTime())) return false;
+
+      const startClean = (habit.startDate || habit.nextDueDate).trim().split(' ')[0];
+      const startDate = new Date(`${startClean}T00:00:00`);
+      if (isNaN(startDate.getTime())) return false;
+
+      // Cannot occur before start date
+      if (targetDate.getTime() < startDate.getTime()) {
+        return false;
+      }
+
+      // Check if target date is a rest day
+      const targetWeekdayName = WEEKDAYS_MAP[targetDate.getDay()];
+      if (habit.restDays && habit.restDays.includes(targetWeekdayName)) {
+        return false;
+      }
+
+      // Exact nextDueDate match always returns true
+      if (habit.nextDueDate.trim() === targetClean) {
+        return true;
+      }
+
+      const diffMs = targetDate.getTime() - startDate.getTime();
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      switch (habit.intervalType) {
+        case 'kunlik':
+          return true;
+
+        case 'haftalik':
+          return diffDays % 7 === 0;
+
+        case '2_haftalik':
+          return diffDays % 14 === 0;
+
+        case 'oylik':
+          return targetDate.getDate() === startDate.getDate();
+
+        case 'custom':
+          const step = habit.customIntervalDays && habit.customIntervalDays > 0 ? habit.customIntervalDays : 1;
+          return diffDays % step === 0;
+
+        default:
+          return habit.nextDueDate.trim() === targetClean;
       }
     }
 
@@ -1076,16 +1210,11 @@
 
     // Renders the statistics card progress bar and week circles
     function renderStats() {
-      if (habitsCache.length === 0) {
-        document.getElementById('progressPercent').textContent = '0%';
-        document.getElementById('progressBar').style.width = '0%';
-        return;
-      }
-
       const todayStr = getUzbekistanDateString();
       let totalToday = 0;
       let completedToday = 0;
 
+      // Update Today's stats first
       habitsCache.forEach(habit => {
         const isCompletedToday = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(todayStr);
         const isScheduledToday = habit.nextDueDate === todayStr || isCompletedToday;
@@ -1102,13 +1231,31 @@
       document.getElementById('progressPercent').textContent = `${percent}%`;
       document.getElementById('progressBar').style.width = `${percent}%`;
 
-      // Update 7-Day calendar dots depending on completions today
-      const dot = document.querySelector(`#day-${uzDayIndex} .day-dot`);
-      if (dot) {
-        if (completedToday > 0 && completedToday === totalToday) {
-          dot.classList.add('completed');
-        } else {
-          dot.classList.remove('completed');
+      // Update week-long calendar dots (Du-Ya) dynamically
+      for (let i = 0; i < 7; i++) {
+        const dateStr = weekDates[i];
+        let totalOnDate = 0;
+        let completedOnDate = 0;
+
+        habitsCache.forEach(habit => {
+          const isCompletedOnDate = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(dateStr);
+          const isScheduled = isHabitScheduledOnDate(habit, dateStr);
+
+          if (isScheduled || isCompletedOnDate) {
+            totalOnDate++;
+            if (isCompletedOnDate) {
+              completedOnDate++;
+            }
+          }
+        });
+
+        const dot = document.querySelector(`#day-${i} .day-dot`);
+        if (dot) {
+          if (totalOnDate > 0 && completedOnDate === totalOnDate) {
+            dot.classList.add('completed');
+          } else {
+            dot.classList.remove('completed');
+          }
         }
       }
     }
@@ -1127,8 +1274,23 @@
       
       // Filter subsets
       let filtered = [];
-      
-      if (currentFilter === 'today') {
+      let isDayFilter = false;
+      let targetSelectedDate = todayStr;
+
+      if (currentFilter.startsWith('day-')) {
+        isDayFilter = true;
+        const dayIdx = parseInt(currentFilter.split('-')[1], 10);
+        targetSelectedDate = weekDates[dayIdx];
+
+        filtered = habitsCache.filter(habit => {
+          const isCompletedOnDate = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(targetSelectedDate);
+          return isHabitScheduledOnDate(habit, targetSelectedDate) || isCompletedOnDate;
+        });
+
+        // Sort by time
+        filtered.sort((a, b) => a.targetTime.localeCompare(b.targetTime));
+
+      } else if (currentFilter === 'today') {
         filtered = habitsCache.filter(habit => {
           const isCompletedToday = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(todayStr);
           return habit.nextDueDate === todayStr || isCompletedToday;
@@ -1137,6 +1299,7 @@
         filtered.sort((a, b) => a.targetTime.localeCompare(b.targetTime));
         
       } else if (currentFilter === 'tomorrow') {
+        targetSelectedDate = tomorrowStr;
         filtered = habitsCache.filter(habit => habit.nextDueDate === tomorrowStr);
         // Sort by time
         filtered.sort((a, b) => a.targetTime.localeCompare(b.targetTime));
@@ -1195,7 +1358,37 @@
 
       container.innerHTML = '';
       filtered.forEach(habit => {
-        const isCompletedToday = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(todayStr);
+        const isCompletedOnDate = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(targetSelectedDate);
+
+        // Check if actions should be allowed (only allowed if selected date is today)
+        const isToday = targetSelectedDate === todayStr;
+
+        let actionHtml = '';
+        if (isCompletedOnDate) {
+          actionHtml = `
+            <span class="badge-completed">
+              <svg viewBox="0 0 24 24" stroke-width="3" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Bajarildi
+            </span>`;
+        } else if (isToday) {
+          actionHtml = `
+            <button class="btn btn-done" onclick="completeHabit('${habit.id}')">Bajarildi</button>
+            <button class="btn btn-skip" onclick="skipHabit('${habit.id}')">Qoldirish</button>`;
+        } else {
+          // If past day
+          if (targetSelectedDate < todayStr) {
+            actionHtml = `
+              <span class="status-missed">
+                Bajarilmagan
+              </span>`;
+          } else {
+            // Future day
+            actionHtml = `
+              <span class="status-scheduled">
+                Rejalashtirilgan
+              </span>`;
+          }
+        }
 
         const card = document.createElement('div');
         card.className = 'glass-card habit-card';
@@ -1214,14 +1407,7 @@
             </div>
           </div>
           <div class="action-group">
-            ${isCompletedToday 
-              ? `<span class="badge-completed">
-                   <svg viewBox="0 0 24 24" stroke-width="3" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                   Bajarildi
-                 </span>` 
-              : `<button class="btn btn-done" onclick="completeHabit('${habit.id}')">Bajarildi</button>
-                 <button class="btn btn-skip" onclick="skipHabit('${habit.id}')">Qoldirish</button>`
-            }
+            ${actionHtml}
             <button class="btn-delete" onclick="triggerDeleteHabit('${habit.id}', '${escapeHtml(habit.name)}')" aria-label="Ochirish">
               <svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </button>
