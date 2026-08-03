@@ -26,14 +26,10 @@
             "Yakshanba"
           ],
           "targetTime": "20:00",
-          "lastCompletedAt": null,
-          "nextDueDate": "2026-08-03",
+          "lastCompletedAt": "2026-08-03",
+          "nextDueDate": "2026-08-04",
           "lastNotifiedDueDate": "2026-08-03_20:00",
-          "pendingReminderTimes": [
-            "20:10",
-            "20:20",
-            "20:30"
-          ]
+          "pendingReminderTimes": []
         },
         {
           "id": "ce8f2811-fac5-4136-bd4c-f00d15375f62",
