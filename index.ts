@@ -823,13 +823,9 @@ bot.catch((err: any) => {
 });
 
 if (process.env.VERCEL !== '1') {
-  // Initialize Turso tables and load cloud database data
-  const { initTursoTables } = require('./turso');
-  const { loadFromTurso } = require('./database');
-
-  initTursoTables().then(() => {
-    loadFromTurso();
-  });
+  // Load database from GitHub repository
+  const { loadFromGitHub } = require('./database');
+  loadFromGitHub();
 
   // Initialize 1-minute reminder and dayjest cron jobs
   initReminderCron(bot);

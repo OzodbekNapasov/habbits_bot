@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { DatabaseData, User, Habit } from './types';
-import { getTursoClient } from './turso';
+import { fetchDbFromGitHub, saveDbToGitHub } from './github';
 
 function getDbPath(): string {
   if (process.env.VERCEL === '1') {
@@ -60,86 +60,18 @@ function writeDb(data: DatabaseData): void {
 }
 
 /**
- * Loads all users and habits from Turso cloud database into local db.json
+ * Loads all users and habits from GitHub repository into local db.json
  */
-export async function loadFromTurso(): Promise<void> {
-  const client = getTursoClient();
-  if (!client) return;
-
-  try {
-    const [usersResult, habitsResult] = await Promise.all([
-      client.execute('SELECT * FROM users'),
-      client.execute('SELECT * FROM habits')
-    ]);
-
-    const usersMap = new Map<number, User>();
-
-    const currentDb = readDb();
-    const existingStatesMap = new Map<number, any>();
-    currentDb.users.forEach((u) => {
-      if (u.creationState) existingStatesMap.set(u.id, u.creationState);
-    });
-
-    for (const row of usersResult.rows) {
-      const id = Number(row.id);
-      const firstName = String(row.first_name);
-      const notificationsEnabled = row.notifications_enabled === 1 || row.notifications_enabled === true;
-      
-      let creationState: any = creationStateMap.get(id) || existingStatesMap.get(id) || null;
-      if (row.creation_state) {
-        try {
-          creationState = JSON.parse(String(row.creation_state));
-        } catch {
-          // ignore
-        }
-      }
-
-      usersMap.set(id, {
-        id,
-        firstName,
-        notificationsEnabled,
-        creationState,
-        habits: [],
-      });
+export async function loadFromGitHub(): Promise<void> {
+  const fetched = await fetchDbFromGitHub();
+  if (fetched) {
+    try {
+      const data = JSON.parse(fetched.content) as DatabaseData;
+      writeDb(data);
+      console.log(`📥 GitHub'dan database muvaffaqiyatli yuklandi! (${data.users?.length || 0} ta foydalanuvchi)`);
+    } catch (err) {
+      console.error('Error parsing db.json from GitHub:', err);
     }
-
-    for (const row of habitsResult.rows) {
-      const userId = Number(row.user_id);
-      const user = usersMap.get(userId);
-
-      if (user) {
-        let restDays: string[] = [];
-        if (row.rest_days) {
-          try {
-            restDays = JSON.parse(String(row.rest_days));
-          } catch {
-            restDays = [];
-          }
-        }
-
-        const habit: Habit = {
-          id: String(row.id),
-          name: String(row.name),
-          intervalType: String(row.interval_type) as any,
-          customIntervalDays: row.custom_interval_days ? Number(row.custom_interval_days) : undefined,
-          intervalDescription: row.interval_description ? String(row.interval_description) : undefined,
-          startDate: row.start_date ? String(row.start_date) : undefined,
-          restDays,
-          targetTime: String(row.target_time),
-          lastCompletedAt: row.last_completed_at ? String(row.last_completed_at) : null,
-          nextDueDate: String(row.next_due_date),
-          lastNotifiedDueDate: row.last_notified_due_date ? String(row.last_notified_due_date) : undefined,
-        };
-
-        user.habits.push(habit);
-      }
-    }
-
-    const loadedUsers = Array.from(usersMap.values());
-    writeDb({ users: loadedUsers });
-    console.log(`📥 Turso bulut bazasidan ${loadedUsers.length} ta foydalanuvchi ma'lumotlari muvaffaqiyatli yuklandi!`);
-  } catch (error) {
-    console.error('❌ Turso bazasidan yuklashda xatolik:', error);
   }
 }
 
@@ -195,21 +127,7 @@ export async function saveUser(userData: { id: number; firstName: string }): Pro
     user = newUser;
   }
   writeDb(db);
-
-  // Turso SQL execution
-  const client = getTursoClient();
-  if (client) {
-    try {
-      await client.execute({
-        sql: `INSERT INTO users (id, first_name, notifications_enabled) VALUES (?, ?, 1)
-              ON CONFLICT(id) DO UPDATE SET first_name = excluded.first_name`,
-        args: [userData.id, userData.firstName],
-      });
-    } catch (err: any) {
-      console.error('Turso saveUser error:', err);
-    }
-  }
-
+  await saveDbToGitHub(JSON.stringify(db, null, 2));
   return user;
 }
 
@@ -240,40 +158,7 @@ export async function addHabit(
 
   user.habits.push(newHabit);
   writeDb(db);
-
-  // Turso SQL execution
-  const client = getTursoClient();
-  if (client) {
-    try {
-      await client.execute({
-        sql: `INSERT INTO users (id, first_name, notifications_enabled) VALUES (?, ?, 1)
-              ON CONFLICT(id) DO UPDATE SET first_name = excluded.first_name`,
-        args: [userId, 'Foydalanuvchi'],
-      });
-
-      await client.execute({
-        sql: `INSERT INTO habits (id, user_id, name, interval_type, custom_interval_days, interval_description, start_date, rest_days, target_time, last_completed_at, next_due_date, last_notified_due_date)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [
-          newHabit.id,
-          userId,
-          newHabit.name,
-          newHabit.intervalType,
-          newHabit.customIntervalDays || null,
-          newHabit.intervalDescription || null,
-          newHabit.startDate || null,
-          JSON.stringify(newHabit.restDays || []),
-          newHabit.targetTime,
-          newHabit.lastCompletedAt || null,
-          newHabit.nextDueDate,
-          newHabit.lastNotifiedDueDate || null,
-        ],
-      });
-    } catch (err: any) {
-      console.error('Turso addHabit error:', err);
-    }
-  }
-
+  await saveDbToGitHub(JSON.stringify(db, null, 2));
   return newHabit;
 }
 
@@ -301,20 +186,7 @@ export async function deleteHabit(userId: number, habitId: string): Promise<bool
 
   if (user.habits.length < initialLength) {
     writeDb(db);
-
-    // Turso SQL execution
-    const client = getTursoClient();
-    if (client) {
-      try {
-        await client.execute({
-          sql: `DELETE FROM habits WHERE id = ? AND user_id = ?`,
-          args: [habitId, userId],
-        });
-      } catch (err: any) {
-        console.error('Turso deleteHabit error:', err);
-      }
-    }
-
+    await saveDbToGitHub(JSON.stringify(db, null, 2));
     return true;
   }
 
@@ -334,20 +206,7 @@ export async function toggleUserNotifications(userId: number): Promise<boolean> 
 
   user.notificationsEnabled = user.notificationsEnabled === undefined ? false : !user.notificationsEnabled;
   writeDb(db);
-
-  // Turso SQL execution
-  const client = getTursoClient();
-  if (client) {
-    try {
-      await client.execute({
-        sql: `UPDATE users SET notifications_enabled = ? WHERE id = ?`,
-        args: [user.notificationsEnabled ? 1 : 0, userId],
-      });
-    } catch (err: any) {
-      console.error('Turso toggleUserNotifications error:', err);
-    }
-  }
-
+  await saveDbToGitHub(JSON.stringify(db, null, 2));
   return user.notificationsEnabled;
 }
 
@@ -364,20 +223,7 @@ export async function clearUserHabits(userId: number): Promise<boolean> {
 
   user.habits = [];
   writeDb(db);
-
-  // Turso SQL execution
-  const client = getTursoClient();
-  if (client) {
-    try {
-      await client.execute({
-        sql: `DELETE FROM habits WHERE user_id = ?`,
-        args: [userId],
-      });
-    } catch (err: any) {
-      console.error('Turso clearUserHabits error:', err);
-    }
-  }
-
+  await saveDbToGitHub(JSON.stringify(db, null, 2));
   return true;
 }
 
@@ -403,47 +249,7 @@ export async function updateHabit(
 
   Object.assign(habit, updates);
   writeDb(db);
-
-  // Turso SQL execution
-  const client = getTursoClient();
-  if (client) {
-    const setClauses: string[] = [];
-    const args: any[] = [];
-
-    if (updates.name !== undefined) {
-      setClauses.push('name = ?');
-      args.push(updates.name);
-    }
-    if (updates.targetTime !== undefined) {
-      setClauses.push('target_time = ?');
-      args.push(updates.targetTime);
-    }
-    if (updates.lastCompletedAt !== undefined) {
-      setClauses.push('last_completed_at = ?');
-      args.push(updates.lastCompletedAt || null);
-    }
-    if (updates.nextDueDate !== undefined) {
-      setClauses.push('next_due_date = ?');
-      args.push(updates.nextDueDate);
-    }
-    if (updates.lastNotifiedDueDate !== undefined) {
-      setClauses.push('last_notified_due_date = ?');
-      args.push(updates.lastNotifiedDueDate || null);
-    }
-
-    if (setClauses.length > 0) {
-      args.push(habitId, userId);
-      try {
-        await client.execute({
-          sql: `UPDATE habits SET ${setClauses.join(', ')} WHERE id = ? AND user_id = ?`,
-          args,
-        });
-      } catch (err: any) {
-        console.error('Turso updateHabit error:', err);
-      }
-    }
-  }
-
+  await saveDbToGitHub(JSON.stringify(db, null, 2));
   return habit;
 }
 
@@ -492,18 +298,6 @@ export async function setUserCreationState(userId: number, state: any): Promise<
     user.creationState = state;
   }
   writeDb(db);
-
-  // Sync state immediately to Turso cloud database for serverless persistence
-  const client = getTursoClient();
-  if (client) {
-    try {
-      await client.execute({
-        sql: `UPDATE users SET creation_state = ? WHERE id = ?`,
-        args: [state ? JSON.stringify(state) : null, userId],
-      });
-    } catch (err: any) {
-      console.error('Turso setUserCreationState error:', err);
-    }
-  }
+  await saveDbToGitHub(JSON.stringify(db, null, 2));
 }
 

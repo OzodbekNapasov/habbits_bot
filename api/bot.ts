@@ -1,31 +1,20 @@
 import { bot } from '../index';
-import { initTursoTables } from '../turso';
-import { loadFromTurso, getHabits, getUsers } from '../database';
+import { loadFromGitHub, getHabits, getUsers } from '../database';
 import fs from 'fs';
 import path from 'path';
 
 let isInitialized = false;
-let isTablesInitialized = false;
 
 async function ensureInitialized() {
   const isVercel = process.env.VERCEL === '1';
-
-  if (!isTablesInitialized) {
-    try {
-      await initTursoTables();
-      isTablesInitialized = true;
-    } catch (err) {
-      console.error('Turso table initialization error:', err);
-    }
-  }
 
   if (isVercel || !isInitialized) {
     const dbPath = isVercel ? path.join('/tmp', 'db.json') : path.join(process.cwd(), 'db.json');
     if (!fs.existsSync(dbPath) || isVercel) {
       try {
-        await loadFromTurso();
+        await loadFromGitHub();
       } catch (err) {
-        console.error('Turso load error:', err);
+        console.error('GitHub load error:', err);
       }
     }
     isInitialized = true;
