@@ -6,6 +6,7 @@ import {
   getCurrentTimeString,
   isHabitForToday,
   isHabitInNextDays,
+  getUzbekistanDate,
 } from './utils';
 import { getRandomQuote } from './quotes';
 
@@ -17,7 +18,7 @@ const UZBEKISTAN_TIMEZONE = 'Asia/Tashkent';
  */
 export async function triggerDailyDigest(bot: Telegraf<any>, targetUserId?: number): Promise<void> {
   const users = getUsers();
-  const todayStr = getTodayDateString();
+  const todayStr = getTodayDateString(getUzbekistanDate());
 
   for (const user of users) {
     if (targetUserId && user.id !== targetUserId) continue;
@@ -63,7 +64,7 @@ export function initReminderCron(bot: Telegraf<any>): void {
   cron.schedule('* * * * *', async () => {
     try {
       const users = getUsers();
-      const now = new Date();
+      const now = getUzbekistanDate();
       const todayStr = getTodayDateString(now);
       const nowTimeStr = getCurrentTimeString(now);
 

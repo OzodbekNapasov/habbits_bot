@@ -1,6 +1,14 @@
 import { Habit, IntervalType } from './types';
 
 /**
+ * Returns a Date object adjusted to Uzbekistan timezone (+05:00 / Asia/Tashkent).
+ */
+export function getUzbekistanDate(date: Date = new Date()): Date {
+  const tzString = date.toLocaleString("en-US", { timeZone: "Asia/Tashkent" });
+  return new Date(tzString);
+}
+
+/**
  * Escapes special HTML characters for Telegram HTML parse_mode
  */
 export function escapeHtml(text: string): string {
@@ -106,7 +114,7 @@ export function formatISOToUzbekDate(isoDateStr: string): string {
 /**
  * Formats a Date object as YYYY-MM-DD HH:mm string in +05:00 / local time.
  */
-export function formatDate(date: Date = new Date()): string {
+export function formatDate(date: Date = getUzbekistanDate()): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -169,7 +177,7 @@ export function getDaysRemainingText(nextDueDateStr: string): string {
   const targetDate = new Date(`${cleanStr}T00:00:00`);
   if (isNaN(targetDate.getTime())) return '';
 
-  const now = new Date();
+  const now = getUzbekistanDate();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
 
   const diffMs = targetDate.getTime() - todayStart.getTime();
@@ -245,7 +253,7 @@ export function getWeekDaysByOffset(offset: number = 0): {
   endDateUz: string;
   days: { dateStr: string; weekdayName: string; formattedDateUz: string }[];
 } {
-  const now = new Date();
+  const now = getUzbekistanDate();
   const dayOfWeek = now.getDay();
 
   // Distance to Monday of current week (if Sunday (0), distance is -6 days)
@@ -294,7 +302,7 @@ export function formatDateWithWeekday(dateStr: string): string {
 /**
  * Gets current time formatted as HH:mm.
  */
-export function getCurrentTimeString(date: Date = new Date()): string {
+export function getCurrentTimeString(date: Date = getUzbekistanDate()): string {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
@@ -308,7 +316,7 @@ export function addMinutesToTime(targetTimeStr: string, minutesToAdd: number): s
   const hours = parseInt(hoursStr, 10) || 0;
   const minutes = parseInt(minutesStr, 10) || 0;
 
-  const date = new Date();
+  const date = getUzbekistanDate();
   date.setHours(hours, minutes, 0, 0);
   date.setTime(date.getTime() + minutesToAdd * 60 * 1000);
 
@@ -321,7 +329,7 @@ export function addMinutesToTime(targetTimeStr: string, minutesToAdd: number): s
 /**
  * Gets time 1 hour into the future formatted as HH:mm.
  */
-export function getOneHourLaterTime(date: Date = new Date()): string {
+export function getOneHourLaterTime(date: Date = getUzbekistanDate()): string {
   const future = new Date(date.getTime() + 60 * 60 * 1000);
   const hours = String(future.getHours()).padStart(2, '0');
   const minutes = String(future.getMinutes()).padStart(2, '0');
@@ -331,7 +339,7 @@ export function getOneHourLaterTime(date: Date = new Date()): string {
 /**
  * Formats a Date object as Date string only (YYYY-MM-DD).
  */
-export function formatDateOnly(date: Date = new Date()): string {
+export function formatDateOnly(date: Date = getUzbekistanDate()): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -342,14 +350,14 @@ export function formatDateOnly(date: Date = new Date()): string {
 /**
  * Gets today's date string formatted as YYYY-MM-DD.
  */
-export function getTodayDateString(date: Date = new Date()): string {
+export function getTodayDateString(date: Date = getUzbekistanDate()): string {
   return formatDateOnly(date);
 }
 
 /**
  * Gets tomorrow's date string formatted as YYYY-MM-DD.
  */
-export function getTomorrowDateString(date: Date = new Date()): string {
+export function getTomorrowDateString(date: Date = getUzbekistanDate()): string {
   const tomorrow = new Date(date);
   tomorrow.setDate(tomorrow.getDate() + 1);
   return formatDateOnly(tomorrow);
@@ -369,7 +377,7 @@ export function isHabitInNextDays(nextDueDate: string, days: number = 7): boolea
   const habitDate = new Date(`${nextDueDate.trim()}T00:00:00`);
   if (isNaN(habitDate.getTime())) return false;
 
-  const now = new Date();
+  const now = getUzbekistanDate();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
 
   const futureEnd = new Date(todayStart);
@@ -415,7 +423,7 @@ export function calculateNextDueDateFromStartDate(
   const day = parseInt(dayStr, 10);
 
   let candidate = new Date(year, month, day, targetHour, targetMinute, 0);
-  const now = new Date();
+  const now = getUzbekistanDate();
 
   // If candidate target time has already passed, schedule for next cycle
   if (candidate.getTime() <= now.getTime()) {
@@ -450,7 +458,7 @@ export function calculateNextDueDate(
   const targetHour = parseInt(hoursStr, 10);
   const targetMinute = parseInt(minutesStr, 10);
 
-  const now = new Date();
+  const now = getUzbekistanDate();
   let candidate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHour, targetMinute, 0);
 
   // If target time today has already passed, schedule for the next interval cycle
@@ -484,7 +492,7 @@ export function calculateNextDueDate(
 export function calculateNextDueDateAfterCompletion(
   intervalType: IntervalType,
   targetTime: string,
-  baseDate: Date = new Date(),
+  baseDate: Date = getUzbekistanDate(),
   restDays?: string[],
   customIntervalDays?: number
 ): string {

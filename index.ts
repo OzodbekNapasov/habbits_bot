@@ -34,6 +34,7 @@ import {
   escapeHtml,
   addMinutesToTime,
   getCurrentTimeString,
+  getUzbekistanDate,
 } from './utils';
 import { IntervalType } from './types';
 import { initReminderCron, triggerDailyDigest } from './cron';
@@ -430,7 +431,7 @@ bot.action(/^done_(.+)$/, async (ctx: any) => {
   }
 
   const { habit } = habitInfo;
-  const now = new Date();
+  const now = getUzbekistanDate();
   const todayStr = getTodayDateString(now);
 
   const nextDueDate = calculateNextDueDateAfterCompletion(
@@ -461,7 +462,7 @@ bot.action(/^skip_(.+)$/, async (ctx: any) => {
   }
 
   const { habit } = habitInfo;
-  const now = new Date();
+  const now = getUzbekistanDate();
 
   const nextDueDate = calculateNextDueDateAfterCompletion(
     habit.intervalType,
@@ -489,7 +490,7 @@ bot.action(/^delay_(\d+)_(.+)$/, async (ctx: any) => {
   }
 
   const { habit } = habitInfo;
-  const now = new Date();
+  const now = getUzbekistanDate();
   const newTargetTime = addMinutesToTime(getCurrentTimeString(now), minutesToAdd);
 
   await updateHabit(userId, habitId, {
@@ -653,54 +654,7 @@ bot.action('rest_done', async (ctx: any) => {
   await ctx.answerCbQuery();
 });
 
-// Multi-step Habit Registration via Text Input using Persistent DB State
-bot.on('text', async (ctx: any) => {
-  const userId = ctx.from.id;
-  const text = ctx.message.text.trim();
-  const state = await getUserCreationState(userId);
-
-  if (!state) {
-    if (!text.startsWith('/')) {
-      await ctx.reply(
-        "✨ <i>Tushunmadim. Yangi odat qo'shish uchun <b>✨ ➕ Yangi odat</b> tugmasini bosing yoki barcha odatlarni ko'rish uchun <b>📊 📋 Mening odatlarim</b> menyusini tanlang.</i>",
-        { parse_mode: 'HTML', ...mainMenuKeyboard }
-      );
-    }
-    return;
-  }
-
-  if (state.step === 'WAITING_NAME') {
-    state.name = text;
-    state.step = 'WAITING_INTERVAL';
-    await setUserCreationState(userId, state);
-
-    const keyboard = Markup.inlineKeyboard([
-      [Markup.button.callback('☀️ ⚡️ Har kuni', 'interval_kunlik')],
-      [Markup.button.callback('🗓 ⚡️ Har haftada (7 kunda)', 'interval_haftalik')],
-      [Markup.button.callback('🔮 ⚡️ Har oyda (1 marta)', 'interval_oylik')],
-      [Markup.button.callback('💎 ⚙️ Boshqa oraliq (Kunlar bilan)', 'interval_boshqa')],
-    ]);
-
-    await ctx.reply(`📌 Odat nomi: <b>${escapeHtml(text)}</b>\n\nEndi ushbu odatning takrorlanish oralig'ini tanlang:`, {
-      parse_mode: 'HTML',
-      ...keyboard,
-    });
-    return;
-  }
-
-  if (state.step === 'WAITING_CUSTOM_DAYS') {
-    const days = parseInt(text, 10);
-    if (isNaN(days) || days <= 0) {
-      await ctx.reply("⚠️ Iltimos, faqat musbat son kiriting (masalan: 3, 5, 20):");
-      return;
-    }
-    state.customIntervalDays = days;
-    state.intervalDescription = `Har ${days} kunda`;
-    state.step = 'WAITING_TIME';
-    await setUserCreationState(userId, state);
-    await ctx.reply("⏰ ⚡️ <b>Odat bajariladigan vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>07:00</code> yoki <code>21:30</code>", { parse_mode: 'HTML' });
-    return;
-  }
+// Habit Registration Callback handlers and Helpers
 
 // Start Date Selection Callbacks
 bot.action('start_date_today', async (ctx: any) => {
