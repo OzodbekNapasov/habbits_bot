@@ -44,11 +44,12 @@
         }
       ],
       "creationState": {
-        "step": "WAITING_TIME",
+        "step": "WAITING_START_DATE",
         "name": "test",
         "intervalType": "kunlik",
         "intervalDescription": "Har kuni",
-        "restDays": []
+        "restDays": [],
+        "targetTime": "12:30"
       }
     },
     {
