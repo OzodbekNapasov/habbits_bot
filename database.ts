@@ -11,10 +11,15 @@ function getDbPath(): string {
   return path.join(process.cwd(), 'db.json');
 }
 
+let cachedDb: DatabaseData | null = null;
+
 /**
  * Reads database contents from db.json file using native fs module.
  */
 function readDb(): DatabaseData {
+  if (cachedDb) {
+    return cachedDb;
+  }
   const dbPath = getDbPath();
   try {
     if (!fs.existsSync(dbPath)) {
@@ -29,10 +34,12 @@ function readDb(): DatabaseData {
         }
       }
       fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2), 'utf-8');
+      cachedDb = initialData;
       return initialData;
     }
     const rawData = fs.readFileSync(dbPath, 'utf-8');
-    return JSON.parse(rawData) as DatabaseData;
+    cachedDb = JSON.parse(rawData) as DatabaseData;
+    return cachedDb;
   } catch (error) {
     console.error('db.json o\'qishda xatolik yuz berdi:', error);
     return { users: [] };
@@ -43,6 +50,7 @@ function readDb(): DatabaseData {
  * Writes database data back to db.json file using native fs module.
  */
 function writeDb(data: DatabaseData): void {
+  cachedDb = data;
   const dbPath = getDbPath();
   try {
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
@@ -59,8 +67,10 @@ export async function loadFromTurso(): Promise<void> {
   if (!client) return;
 
   try {
-    const usersResult = await client.execute('SELECT * FROM users');
-    const habitsResult = await client.execute('SELECT * FROM habits');
+    const [usersResult, habitsResult] = await Promise.all([
+      client.execute('SELECT * FROM users'),
+      client.execute('SELECT * FROM habits')
+    ]);
 
     const usersMap = new Map<number, User>();
 
@@ -448,26 +458,13 @@ export async function getUserCreationState(userId: number): Promise<any> {
     return inMemoryState;
   }
 
-  const client = getTursoClient();
-  if (client) {
-    try {
-      const result = await client.execute({
-        sql: `SELECT creation_state FROM users WHERE id = ?`,
-        args: [userId],
-      });
-      if (result.rows.length > 0 && result.rows[0].creation_state) {
-        const parsed = JSON.parse(String(result.rows[0].creation_state));
-        creationStateMap.set(userId, parsed);
-        return parsed;
-      }
-    } catch (err: any) {
-      console.error('Turso getUserCreationState error:', err);
-    }
-  }
-
   const db = readDb();
   const user = db.users.find((u) => u.id === userId);
-  return user ? user.creationState || null : null;
+  const state = user ? user.creationState || null : null;
+  if (state !== null) {
+    creationStateMap.set(userId, state);
+  }
+  return state;
 }
 
 /**

@@ -5,11 +5,23 @@ import fs from 'fs';
 import path from 'path';
 
 let isInitialized = false;
+let isTablesInitialized = false;
 
 async function ensureInitialized() {
-  if (!isInitialized) {
-    const dbPath = process.env.VERCEL === '1' ? path.join('/tmp', 'db.json') : path.join(process.cwd(), 'db.json');
-    if (!fs.existsSync(dbPath)) {
+  const isVercel = process.env.VERCEL === '1';
+
+  if (!isTablesInitialized) {
+    try {
+      await initTursoTables();
+      isTablesInitialized = true;
+    } catch (err) {
+      console.error('Turso table initialization error:', err);
+    }
+  }
+
+  if (isVercel || !isInitialized) {
+    const dbPath = isVercel ? path.join('/tmp', 'db.json') : path.join(process.cwd(), 'db.json');
+    if (!fs.existsSync(dbPath) || isVercel) {
       try {
         await loadFromTurso();
       } catch (err) {
