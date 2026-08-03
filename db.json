@@ -43,7 +43,9 @@
           "nextDueDate": "2026-08-03"
         }
       ],
-      "creationState": null
+      "creationState": {
+        "step": "WAITING_NAME"
+      }
     },
     {
       "id": 5657200575,
