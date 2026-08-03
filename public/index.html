@@ -42,6 +42,7 @@
       color: var(--text-main);
       min-height: 100vh;
       padding: 16px;
+      padding-bottom: 96px; /* Spacing for FAB button */
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -129,6 +130,12 @@
       color: var(--text-muted);
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .streak-badge {
       background: rgba(245, 158, 11, 0.12);
       border: 1px solid rgba(245, 158, 11, 0.25);
@@ -147,6 +154,31 @@
       height: 14px;
       fill: #f59e0b;
       filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.4));
+    }
+
+    .settings-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .settings-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .settings-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
     }
 
     /* Stats Overview Layout */
@@ -306,7 +338,7 @@
     }
 
     .habit-card:active {
-      transform: scale(0.98);
+      transform: scale(0.99);
     }
 
     .habit-info {
@@ -391,6 +423,34 @@
       background: rgba(255, 255, 255, 0.08);
     }
 
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: rgba(239, 68, 68, 0.4);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-left: 2px;
+    }
+
+    .btn-delete:active {
+      transform: scale(0.85);
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger-color);
+    }
+
+    .btn-delete svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+    }
+
     .badge-completed {
       background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.2);
@@ -427,6 +487,282 @@
       stroke: var(--text-muted);
       opacity: 0.5;
     }
+
+    /* Floating Action Button */
+    .fab-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      color: #fff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5);
+      cursor: pointer;
+      z-index: 90;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fab-btn:active {
+      transform: scale(0.9);
+    }
+
+    .fab-btn svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      fill: none;
+    }
+
+    /* Bottom Sheet Drawer Overlay System */
+    .sheet-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .sheet-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .bottom-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg-color);
+      border-top: 1px solid var(--card-border);
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      z-index: 101;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.32, 0.94, 0.6, 1);
+      padding: 24px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .bottom-sheet.open {
+      transform: translateY(0);
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sheet-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sheet-title svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--accent-color);
+      fill: none;
+    }
+
+    .sheet-close {
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .sheet-close:active {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sheet-close svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+    }
+
+    /* Forms Elements styling */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-color);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+    }
+
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .chip.active {
+      background: var(--accent-color);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: var(--glow-shadow);
+    }
+
+    .btn-submit {
+      background: var(--accent-gradient);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      margin-top: 10px;
+      box-shadow: var(--glow-shadow);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.97);
+    }
+
+    /* Notification Setting Panel styling */
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      padding: 16px;
+      border-radius: 16px;
+    }
+
+    .settings-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .settings-label {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .settings-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Modern Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 28px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: .3s;
+      border-radius: 34px;
+      border: 1px solid var(--card-border);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--success-color);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
   </style>
 </head>
 <body>
@@ -444,9 +780,14 @@
         <div class="user-subtitle">Shaxsiy Odatlar Boshqaruvi</div>
       </div>
     </div>
-    <div class="streak-badge">
-      <svg class="icon-flame" viewBox="0 0 24 24"><path d="M17.66 11.57c-.77-1.9-2.03-3.66-3.75-4.94-1.18-.88-2.61-1.19-3.65-2.22-.74-.74-.96-1.72-.6-2.65C9.69 1.76 9.69 1 9.69 1c-.2.81-.62 1.84-1.33 2.53C6.73 5.15 6 7.42 6 9.77c0 3.25 2.11 6.13 5.25 7.15.58.19 1.18.3 1.79.31 3.25.04 6.01-2.28 6.47-5.5.07-.49.03-.96-.06-1.42z"/></svg>
-      <span id="streakCount">1</span> kun
+    <div class="header-actions">
+      <div class="streak-badge">
+        <svg class="icon-flame" viewBox="0 0 24 24"><path d="M17.66 11.57c-.77-1.9-2.03-3.66-3.75-4.94-1.18-.88-2.61-1.19-3.65-2.22-.74-.74-.96-1.72-.6-2.65C9.69 1.76 9.69 1 9.69 1c-.2.81-.62 1.84-1.33 2.53C6.73 5.15 6 7.42 6 9.77c0 3.25 2.11 6.13 5.25 7.15.58.19 1.18.3 1.79.31 3.25.04 6.01-2.28 6.47-5.5.07-.49.03-.96-.06-1.42z"/></svg>
+        <span id="streakCount">1</span> kun
+      </div>
+      <button class="settings-btn" onclick="toggleSheet('settingsSheet', true)" aria-label="Sozlamalar">
+        <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
     </div>
   </div>
 
@@ -511,6 +852,98 @@
     </div>
   </div>
 
+  <!-- Floating Add Habit Button -->
+  <button class="fab-btn" onclick="toggleSheet('addHabitSheet', true)" aria-label="Odat qo'shish">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+  </button>
+
+  <!-- Bottom Sheet Overlay -->
+  <div class="sheet-overlay" id="sheetOverlay" onclick="closeAllSheets()"></div>
+
+  <!-- 1. Bottom Sheet: Add Habit Form -->
+  <div class="bottom-sheet" id="addHabitSheet">
+    <div class="sheet-header">
+      <div class="sheet-title">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Yangi Odat Yaratish
+      </div>
+      <button class="sheet-close" onclick="toggleSheet('addHabitSheet', false)">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <form id="addHabitForm" onsubmit="submitHabit(event)" style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="form-group">
+        <label class="form-label">Odat nomi</label>
+        <input type="text" id="habitNameInput" class="form-input" placeholder="Masalan: Kitob o'qish, Mashq qilish..." required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Takrorlanish turi</label>
+        <select id="habitIntervalInput" class="form-input" onchange="handleIntervalChange()" style="background-color: var(--bg-color);">
+          <option value="daily">Har kuni</option>
+          <option value="weekly">Haftada bir marta</option>
+          <option value="monthly">Oyda bir marta</option>
+          <option value="custom">Oraliq kunlar bo'yicha (Custom)</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="customDaysGroup" style="display: none;">
+        <label class="form-label">Kunlar oralig'i (Masalan: 3 kunda bir)</label>
+        <input type="number" id="customDaysInput" class="form-input" placeholder="Kunlar soni" min="1" value="2">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tanaffus kunlari (Tugmachalarni bosing)</label>
+        <div class="chip-grid" id="restDaysContainer">
+          <div class="chip" data-day="Du">Du</div>
+          <div class="chip" data-day="Se">Se</div>
+          <div class="chip" data-day="Ch">Ch</div>
+          <div class="chip" data-day="Pa">Pa</div>
+          <div class="chip" data-day="Ju">Ju</div>
+          <div class="chip" data-day="Sh">Sh</div>
+          <div class="chip" data-day="Ya">Ya</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Bajarish vaqti</label>
+        <input type="time" id="habitTimeInput" class="form-input" value="07:00" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Boshlanish sanasi</label>
+        <input type="date" id="habitStartDateInput" class="form-input" required>
+      </div>
+
+      <button type="submit" class="btn-submit">Yaratish</button>
+    </form>
+  </div>
+
+  <!-- 2. Bottom Sheet: Settings Panel -->
+  <div class="bottom-sheet" id="settingsSheet">
+    <div class="sheet-header">
+      <div class="sheet-title">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Sozlamalar paneli
+      </div>
+      <button class="sheet-close" onclick="toggleSheet('settingsSheet', false)">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-info">
+        <div class="settings-label">Bildirishnomalar</div>
+        <div class="settings-desc">Kunlik va haftalik eslatmalarni yoqish/o'chirish</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="notificationToggle" onchange="toggleNotifications()">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
   <script>
     // Initialize Telegram WebApp API
     const tg = window.Telegram ? window.Telegram.WebApp : null;
@@ -543,6 +976,9 @@
       return formatter.format(date); // Format: YYYY-MM-DD
     }
 
+    // Pre-fill Start Date form input with Uzbekistan Local Date
+    document.getElementById('habitStartDateInput').value = getUzbekistanDateString();
+
     // Set Active State to Current Day in Calendar Header
     const currentDayUz = new Date().getDay(); // 0 is Sunday, 1 is Monday...
     const uzDayIndex = currentDayUz === 0 ? 6 : currentDayUz - 1; // Map to 0-6 (Du-Ya)
@@ -550,6 +986,14 @@
     if (activeCell) {
       activeCell.classList.add('active');
     }
+
+    // Toggle Chip activation in Rest Days form
+    const restDayChips = document.querySelectorAll('#restDaysContainer .chip');
+    restDayChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('active');
+      });
+    });
 
     // Bind Event Handlers to Filter Tabs
     const tabButtons = document.querySelectorAll('#filterTabs .tab-btn');
@@ -562,7 +1006,42 @@
       });
     });
 
-    // Fetches the entire list of user habits and triggers rendering
+    // Bottom Sheet management
+    function toggleSheet(sheetId, show) {
+      const overlay = document.getElementById('sheetOverlay');
+      const sheet = document.getElementById(sheetId);
+      if (show) {
+        overlay.classList.add('open');
+        sheet.classList.add('open');
+      } else {
+        sheet.classList.remove('open');
+        // Close overlay if no other sheet is open
+        const openSheets = document.querySelectorAll('.bottom-sheet.open');
+        if (openSheets.length <= 1) {
+          overlay.classList.remove('open');
+        }
+      }
+    }
+
+    function closeAllSheets() {
+      document.getElementById('sheetOverlay').classList.remove('open');
+      document.querySelectorAll('.bottom-sheet').forEach(sheet => {
+        sheet.classList.remove('open');
+      });
+    }
+
+    // Toggle visibility of customDays parameter in add form
+    function handleIntervalChange() {
+      const val = document.getElementById('habitIntervalInput').value;
+      const customGroup = document.getElementById('customDaysGroup');
+      if (val === 'custom') {
+        customGroup.style.display = 'flex';
+      } else {
+        customGroup.style.display = 'none';
+      }
+    }
+
+    // Fetches the entire list of user habits and settings
     async function fetchUserHabits() {
       try {
         const queryParam = userId ? `?userId=${userId}` : '';
@@ -580,6 +1059,18 @@
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
             Ma'lumotlarni yuklashda xatolik yuz berdi.
           </div>`;
+      }
+    }
+
+    // Fetches and initializes notification settings toggle status
+    async function fetchSettings() {
+      if (!userId) return;
+      try {
+        const response = await fetch(`/api/user/settings?userId=${userId}`);
+        const data = await response.json();
+        document.getElementById('notificationToggle').checked = data.notificationsEnabled;
+      } catch (err) {
+        console.error('Sozlamalarni yuklashda xatolik:', err);
       }
     }
 
@@ -731,6 +1222,9 @@
               : `<button class="btn btn-done" onclick="completeHabit('${habit.id}')">Bajarildi</button>
                  <button class="btn btn-skip" onclick="skipHabit('${habit.id}')">Qoldirish</button>`
             }
+            <button class="btn-delete" onclick="triggerDeleteHabit('${habit.id}', '${escapeHtml(habit.name)}')" aria-label="Ochirish">
+              <svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            </button>
           </div>
         `;
         container.appendChild(card);
@@ -779,6 +1273,117 @@
       }
     }
 
+    // Add New Habit API call
+    async function submitHabit(event) {
+      event.preventDefault();
+      if (!userId) return alert("Telegram ID aniqlanmadi.");
+
+      const name = document.getElementById('habitNameInput').value.trim();
+      const intervalType = document.getElementById('habitIntervalInput').value;
+      const customDays = parseInt(document.getElementById('customDaysInput').value, 10);
+      const targetTime = document.getElementById('habitTimeInput').value;
+      const startDate = document.getElementById('habitStartDateInput').value;
+
+      // Extract Selected Rest Days
+      const selectedRestDays = [];
+      document.querySelectorAll('#restDaysContainer .chip.active').forEach(chip => {
+        selectedRestDays.push(chip.getAttribute('data-day'));
+      });
+
+      // Construct dynamic description
+      let intervalDescription = 'Har kuni';
+      let customIntervalDays = undefined;
+      if (intervalType === 'weekly') {
+        intervalDescription = 'Haftada 1 marta';
+      } else if (intervalType === 'monthly') {
+        intervalDescription = 'Oyda 1 marta';
+      } else if (intervalType === 'custom') {
+        customIntervalDays = customDays;
+        intervalDescription = `Har ${customDays} kunda`;
+      }
+
+      if (selectedRestDays.length > 0) {
+        intervalDescription += ` (Tanaffus: ${selectedRestDays.join(', ')})`;
+      }
+
+      try {
+        const response = await fetch('/api/habits/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            name,
+            intervalType,
+            customIntervalDays,
+            intervalDescription,
+            restDays: selectedRestDays,
+            targetTime,
+            startDate
+          })
+        });
+
+        const resData = await response.json();
+        if (resData.success) {
+          // Reset form fields
+          document.getElementById('habitNameInput').value = '';
+          document.querySelectorAll('#restDaysContainer .chip').forEach(c => c.classList.remove('active'));
+          closeAllSheets();
+          // Reload UI data
+          await fetchUserHabits();
+        } else {
+          alert("Xatolik yuz berdi: " + (resData.error || "Noma'lum xato"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Server bilan bog'lanishda xatolik yuz berdi.");
+      }
+    }
+
+    // Delete Habit Trigger with confirmation
+    async function triggerDeleteHabit(habitId, name) {
+      if (!userId) return;
+      const confirmed = confirm(`"${name}" odatini butkul o'chirishni xohlaysizmi?`);
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch('/api/habits/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, habitId })
+        });
+        const resData = await response.json();
+        if (resData.success) {
+          await fetchUserHabits();
+        } else {
+          alert("Xatolik yuz berdi: " + (resData.error || "Noma'lum xato"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Odatni o'chirishda xatolik yuz berdi.");
+      }
+    }
+
+    // Toggle Notifications status change API call
+    async function toggleNotifications() {
+      if (!userId) return;
+      try {
+        const response = await fetch('/api/user/settings/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        const resData = await response.json();
+        if (resData.success) {
+          document.getElementById('notificationToggle').checked = resData.notificationsEnabled;
+        } else {
+          alert("Sozlamalarni saqlashda xatolik yuz berdi.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Server bilan bog'lanishda xatolik yuz berdi.");
+      }
+    }
+
     // Simple HTML escaping helper to prevent XSS
     function escapeHtml(unsafe) {
       return unsafe
@@ -793,6 +1398,7 @@
 
     // Start App Initialization
     fetchUserHabits();
+    fetchSettings();
   </script>
 </body>
 </html>

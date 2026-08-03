@@ -1,8 +1,8 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
-import { getHabits, getUsers, findHabitById, updateHabit } from './database';
-import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion } from './utils';
+import { getHabits, getUsers, findHabitById, updateHabit, addHabit, deleteHabit, toggleUserNotifications, getUser } from './database';
+import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion, calculateNextDueDateFromStartDate } from './utils';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
@@ -123,6 +123,126 @@ export function startWebServer(): void {
 
           res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify({ success: true, nextDueDate }));
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
+    // API Endpoint: /api/habits/add
+    if (pathname === '/api/habits/add' && req.method === 'POST') {
+      let bodyStr = '';
+      req.on('data', chunk => {
+        bodyStr += chunk;
+      });
+      req.on('end', async () => {
+        try {
+          const { userId, name, intervalType, customIntervalDays, intervalDescription, restDays, targetTime, startDate } = JSON.parse(bodyStr);
+          if (!userId || !name || !intervalType || !targetTime || !startDate) {
+            res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ error: 'Missing required fields' }));
+            return;
+          }
+
+          const uId = parseInt(userId, 10);
+          const nextDueDate = calculateNextDueDateFromStartDate(
+            startDate,
+            targetTime,
+            intervalType,
+            restDays || [],
+            customIntervalDays
+          );
+
+          const habit = await addHabit(uId, {
+            name,
+            intervalType,
+            customIntervalDays,
+            intervalDescription,
+            startDate,
+            restDays: restDays || [],
+            targetTime,
+            lastCompletedAt: null,
+            nextDueDate,
+          });
+
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, habit }));
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
+    // API Endpoint: /api/habits/delete
+    if (pathname === '/api/habits/delete' && req.method === 'POST') {
+      let bodyStr = '';
+      req.on('data', chunk => {
+        bodyStr += chunk;
+      });
+      req.on('end', async () => {
+        try {
+          const { userId, habitId } = JSON.parse(bodyStr);
+          if (!userId || !habitId) {
+            res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ error: 'Missing userId or habitId' }));
+            return;
+          }
+
+          const uId = parseInt(userId, 10);
+          await deleteHabit(uId, habitId);
+
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true }));
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
+    // API Endpoint: /api/user/settings
+    if (pathname === '/api/user/settings' && req.method === 'GET') {
+      const userIdParam = parsedUrl.searchParams.get('userId');
+      if (!userIdParam) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ error: 'Missing userId' }));
+        return;
+      }
+
+      const uId = parseInt(userIdParam, 10);
+      const user = getUser(uId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ notificationsEnabled: user?.notificationsEnabled !== false }));
+      return;
+    }
+
+    // API Endpoint: /api/user/settings/toggle
+    if (pathname === '/api/user/settings/toggle' && req.method === 'POST') {
+      let bodyStr = '';
+      req.on('data', chunk => {
+        bodyStr += chunk;
+      });
+      req.on('end', async () => {
+        try {
+          const { userId } = JSON.parse(bodyStr);
+          if (!userId) {
+            res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ error: 'Missing userId' }));
+            return;
+          }
+
+          const uId = parseInt(userId, 10);
+          await toggleUserNotifications(uId);
+          const user = getUser(uId);
+
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, notificationsEnabled: user?.notificationsEnabled !== false }));
         } catch (err: any) {
           res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify({ error: err.message }));

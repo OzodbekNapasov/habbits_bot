@@ -1,6 +1,6 @@
 import { bot } from '../index';
-import { loadFromGitHub, getHabits, getUsers, updateHabit, findHabitById } from '../database';
-import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion } from '../utils';
+import { loadFromGitHub, getHabits, getUsers, updateHabit, findHabitById, addHabit, deleteHabit, toggleUserNotifications, getUser } from '../database';
+import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion, calculateNextDueDateFromStartDate } from '../utils';
 import fs from 'fs';
 import path from 'path';
 
@@ -139,6 +139,117 @@ export default async function handler(req: any, res: any) {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({ success: true, nextDueDate });
+  }
+
+  // Serve API Endpoint: /api/habits/add
+  if (pathname === '/api/habits/add' && req.method === 'POST') {
+    await ensureInitialized();
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // ignore
+      }
+    }
+    const { userId, name, intervalType, customIntervalDays, intervalDescription, restDays, targetTime, startDate } = body;
+    if (!userId || !name || !intervalType || !targetTime || !startDate) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const uId = parseInt(userId, 10);
+    const nextDueDate = calculateNextDueDateFromStartDate(
+      startDate,
+      targetTime,
+      intervalType,
+      restDays || [],
+      customIntervalDays
+    );
+
+    const habit = await addHabit(uId, {
+      name,
+      intervalType,
+      customIntervalDays,
+      intervalDescription,
+      startDate,
+      restDays: restDays || [],
+      targetTime,
+      lastCompletedAt: null,
+      nextDueDate,
+    });
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (habit) {
+      return res.status(200).json({ success: true, habit });
+    } else {
+      return res.status(500).json({ error: 'Failed to add habit' });
+    }
+  }
+
+  // Serve API Endpoint: /api/habits/delete
+  if (pathname === '/api/habits/delete' && req.method === 'POST') {
+    await ensureInitialized();
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // ignore
+      }
+    }
+    const { userId, habitId } = body;
+    if (!userId || !habitId) {
+      return res.status(400).json({ error: 'Missing userId or habitId' });
+    }
+
+    const uId = parseInt(userId, 10);
+    await deleteHabit(uId, habitId);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).json({ success: true });
+  }
+
+  // Serve API Endpoint: /api/user/settings
+  if (pathname === '/api/user/settings' && req.method === 'GET') {
+    await ensureInitialized();
+    const userIdParam = parsedUrl.searchParams.get('userId');
+    if (!userIdParam) {
+      return res.status(400).json({ error: 'Missing userId' });
+    }
+
+    const uId = parseInt(userIdParam, 10);
+    const user = getUser(uId);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).json({ notificationsEnabled: user?.notificationsEnabled !== false });
+  }
+
+  // Serve API Endpoint: /api/user/settings/toggle
+  if (pathname === '/api/user/settings/toggle' && req.method === 'POST') {
+    await ensureInitialized();
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // ignore
+      }
+    }
+    const { userId } = body;
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId' });
+    }
+
+    const uId = parseInt(userId, 10);
+    await toggleUserNotifications(uId);
+    const user = getUser(uId);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).json({ success: true, notificationsEnabled: user?.notificationsEnabled !== false });
   }
 
   // If request is GET (e.g. Mini App UI page view), serve public/index.html
