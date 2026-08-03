@@ -31,7 +31,7 @@
         }
       ],
       "creationState": {
-        "step": "WAITING_REST_DAYS",
+        "step": "WAITING_TIME",
         "name": "Kitob o'qish bo'yicha",
         "intervalType": "kunlik",
         "intervalDescription": "Har kuni",
