@@ -26,6 +26,19 @@ export default async function handler(req: any, res: any) {
   const parsedUrl = new URL(reqUrl, 'http://localhost');
   const pathname = parsedUrl.pathname;
 
+  // Serve API Endpoint: /api/cron
+  if (pathname === '/api/cron' && req.method === 'GET') {
+    await ensureInitialized();
+    try {
+      const { runReminderCheck } = require('../cron');
+      await runReminderCheck(bot);
+      return res.status(200).send('Cron reminder check completed successfully!');
+    } catch (err: any) {
+      console.error('Cron check error:', err);
+      return res.status(500).send(`Cron check error: ${err.message}`);
+    }
+  }
+
   // Serve API Endpoint: /api/habits
   if (pathname === '/api/habits' && req.method === 'GET') {
     await ensureInitialized();
