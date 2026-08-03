@@ -43,16 +43,7 @@
           "nextDueDate": "2026-08-03"
         }
       ],
-      "creationState": {
-        "step": "WAITING_START_DATE",
-        "name": "Kitob o'qish bo'yicha",
-        "intervalType": "kunlik",
-        "intervalDescription": "Har kuni",
-        "restDays": [
-          "Ya"
-        ],
-        "targetTime": "15:00"
-      }
+      "creationState": null
     },
     {
       "id": 5657200575,
