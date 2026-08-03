@@ -41,18 +41,6 @@
           "targetTime": "15:00",
           "lastCompletedAt": null,
           "nextDueDate": "2026-08-03"
-        },
-        {
-          "id": "fc39a883-cf67-42f3-926e-223869d5e575",
-          "name": "test",
-          "intervalType": "kunlik",
-          "intervalDescription": "Har kuni",
-          "startDate": "2026-08-03",
-          "restDays": [],
-          "targetTime": "12:46",
-          "lastCompletedAt": "2026-08-03",
-          "nextDueDate": "2026-08-04",
-          "lastNotifiedDueDate": "2026-08-03_12:46"
         }
       ],
       "creationState": null
