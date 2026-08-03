@@ -301,3 +301,78 @@ export async function setUserCreationState(userId: number, state: any): Promise<
   await saveDbToGitHub(JSON.stringify(db, null, 2));
 }
 
+/**
+ * Calculates the current streak for a habit based on its completionHistory.
+ * Strategy: Counts how many consecutive *scheduled* days (from today backwards)
+ * the habit has been completed. Rest days are skipped and don't break the streak.
+ */
+function calculateStreak(habit: Habit): number {
+  const history = new Set(habit.completionHistory || []);
+  if (history.size === 0) return 0;
+
+  const { WEEKDAYS_MAP, isHabitScheduledOnDate } = require('./utils');
+
+  let streak = 0;
+  const checkDate = new Date();
+  checkDate.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 365; i++) {
+    const year = checkDate.getFullYear();
+    const month = String(checkDate.getMonth() + 1).padStart(2, '0');
+    const day = String(checkDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+
+    const isRestDay =
+      habit.restDays && habit.restDays.includes(WEEKDAYS_MAP[checkDate.getDay()]);
+
+    if (isRestDay) {
+      // Rest day — skip without breaking streak
+      checkDate.setDate(checkDate.getDate() - 1);
+      continue;
+    }
+
+    const scheduled = isHabitScheduledOnDate(habit, dateStr);
+    if (!scheduled) break; // Not in this interval cycle — stop
+
+    if (history.has(dateStr)) {
+      streak++;
+    } else {
+      break; // Missed a scheduled day — streak broken
+    }
+
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+
+  return streak;
+}
+
+/**
+ * Records a habit completion for today: updates completionHistory and recalculates streak.
+ */
+export async function addCompletionRecord(
+  userId: number,
+  habitId: string,
+  dateStr: string
+): Promise<Habit | null> {
+  const db = readDb();
+  const user = db.users.find((u) => u.id === userId);
+  if (!user) return null;
+
+  const habit = user.habits.find((h) => h.id === habitId);
+  if (!habit) return null;
+
+  if (!habit.completionHistory) habit.completionHistory = [];
+
+  if (!habit.completionHistory.includes(dateStr)) {
+    habit.completionHistory.push(dateStr);
+    habit.completionHistory.sort();
+  }
+
+  habit.streak = calculateStreak(habit);
+
+  writeDb(db);
+  await saveDbToGitHub(JSON.stringify(db, null, 2));
+  return habit;
+}
+
+

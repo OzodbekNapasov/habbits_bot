@@ -12,6 +12,7 @@ import {
   updateHabit,
   getUserCreationState,
   setUserCreationState,
+  addCompletionRecord,
 } from './database';
 import {
   isValidTimeFormat,
@@ -505,7 +506,11 @@ bot.action(/^done_(.+)$/, async (ctx: any) => {
   await updateHabit(userId, habitId, {
     lastCompletedAt: todayStr,
     nextDueDate,
+    pendingReminderTimes: [], // Clear re-notifications on completion
   });
+
+  // Record completion and update streak
+  await addCompletionRecord(userId, habitId, todayStr);
 
   await ctx.editMessageText(`🎉 Barakalla! <b>${escapeHtml(habit.name)}</b> odatini muvaffaqiyatli bajardingiz! Keyingi eslatma kuni: ${formatDateWithWeekday(nextDueDate)}.`, { parse_mode: 'HTML' });
   await ctx.answerCbQuery("Barakalla! 🎉");
@@ -532,7 +537,10 @@ bot.action(/^skip_(.+)$/, async (ctx: any) => {
     habit.customIntervalDays
   );
 
-  await updateHabit(userId, habitId, { nextDueDate });
+  await updateHabit(userId, habitId, {
+    nextDueDate,
+    pendingReminderTimes: [], // Clear re-notifications on skip
+  });
 
   await ctx.editMessageText('❌ Bu safargi harakat qoldirildi.');
   await ctx.answerCbQuery("Harakat qoldirildi. ❌");

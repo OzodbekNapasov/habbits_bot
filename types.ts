@@ -12,6 +12,12 @@ export interface Habit {
   lastCompletedAt?: string | null;
   nextDueDate: string; // YYYY-MM-DD
   lastNotifiedDueDate?: string;
+  /** Number of consecutive scheduled days completed without a miss */
+  streak?: number;
+  /** List of YYYY-MM-DD dates the habit was marked as done */
+  completionHistory?: string[];
+  /** Pending re-notification times for today e.g. ['20:10','20:20','20:30'] */
+  pendingReminderTimes?: string[];
 }
 
 export interface User {

@@ -1,6 +1,6 @@
 import { bot } from '../index';
-import { loadFromGitHub, getHabits, getUsers, updateHabit, findHabitById, addHabit, deleteHabit, toggleUserNotifications, getUser } from '../database';
-import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion, calculateNextDueDateFromStartDate } from '../utils';
+import { loadFromGitHub, getHabits, getUsers, updateHabit, findHabitById, addHabit, deleteHabit, toggleUserNotifications, getUser, addCompletionRecord } from '../database';
+import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion, calculateNextDueDateFromStartDate, addMinutesToTime } from '../utils';
 import fs from 'fs';
 import path from 'path';
 
@@ -95,7 +95,11 @@ export default async function handler(req: any, res: any) {
     await updateHabit(uId, habitId, {
       lastCompletedAt: todayStr,
       nextDueDate,
+      pendingReminderTimes: [], // Clear pending re-notifications on completion
     });
+
+    // Record completion and update streak
+    await addCompletionRecord(uId, habitId, todayStr);
 
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -250,6 +254,81 @@ export default async function handler(req: any, res: any) {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({ success: true, notificationsEnabled: user?.notificationsEnabled !== false });
+  }
+
+  // Serve API Endpoint: /api/habits/stats
+  if (pathname === '/api/habits/stats' && req.method === 'GET') {
+    await ensureInitialized();
+    const userIdParam = parsedUrl.searchParams.get('userId');
+    if (!userIdParam) return res.status(400).json({ error: 'Missing userId' });
+
+    const uId = parseInt(userIdParam, 10);
+    const habits = getHabits(uId);
+
+    // Build last 30 days date list
+    const now = getUzbekistanDate();
+    const days: string[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+    }
+
+    // Per-day: how many habits were completed vs scheduled
+    const dailyStats = days.map((dateStr) => {
+      const scheduled = habits.filter((h) => {
+        const { isHabitScheduledOnDate } = require('../utils');
+        return isHabitScheduledOnDate(h, dateStr);
+      });
+      const completed = scheduled.filter((h) =>
+        h.completionHistory && h.completionHistory.includes(dateStr)
+      );
+      return {
+        date: dateStr,
+        scheduled: scheduled.length,
+        completed: completed.length,
+        percent: scheduled.length > 0 ? Math.round((completed.length / scheduled.length) * 100) : null,
+      };
+    });
+
+    // Per-habit streak summary
+    const habitStats = habits.map((h) => ({
+      id: h.id,
+      name: h.name,
+      streak: h.streak || 0,
+      totalCompleted: (h.completionHistory || []).length,
+      lastCompleted: h.lastCompletedAt || null,
+    }));
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).json({ dailyStats, habitStats });
+  }
+
+  // Serve API Endpoint: /api/habits/export (CSV download)
+  if (pathname === '/api/habits/export' && req.method === 'GET') {
+    await ensureInitialized();
+    const userIdParam = parsedUrl.searchParams.get('userId');
+    if (!userIdParam) return res.status(400).json({ error: 'Missing userId' });
+
+    const uId = parseInt(userIdParam, 10);
+    const habits = getHabits(uId);
+
+    const csvRows: string[] = [
+      'Odat nomi,Interval,Vaqt,Streak,Jami bajarilgan,Bajarilgan sanalar'
+    ];
+
+    for (const h of habits) {
+      const history = (h.completionHistory || []).join('; ');
+      csvRows.push(
+        `"${h.name}","${h.intervalDescription || h.intervalType}",${h.targetTime},${h.streak || 0},${(h.completionHistory || []).length},"${history}"`
+      );
+    }
+
+    const csv = csvRows.join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="odatlar.csv"');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).send('\uFEFF' + csv); // BOM for Excel UTF-8
   }
 
   // If request is GET (e.g. Mini App UI page view), serve public/index.html

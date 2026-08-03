@@ -875,6 +875,10 @@
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tab-svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
       Barchasi
     </button>
+    <button class="tab-btn" data-filter="stats">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tab-svg"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      Statistika
+    </button>
   </div>
 
   <!-- Section Header -->
@@ -888,6 +892,27 @@
     <div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
       Odatlar yuklanmoqda...
+    </div>
+  </div>
+
+  <!-- Statistics Panel (hidden by default, shown on Statistika tab) -->
+  <div id="statsPanel" style="display:none; padding: 4px 0 80px;">
+    <!-- Habit Streak Cards -->
+    <div id="streakCards" style="margin-bottom:20px;"></div>
+
+    <!-- 30-Day Chart -->
+    <div class="glass-card" style="padding:18px 16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:#e2e8f0;">
+          <svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:#7c3aed;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Oxirgi 30 kun (bajarilish %)
+        </div>
+        <button onclick="exportCSV()" style="background:rgba(124,58,237,0.18);border:1px solid rgba(124,58,237,0.4);border-radius:10px;padding:6px 12px;color:#a78bfa;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+          <svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;stroke:currentColor;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          CSV
+        </button>
+      </div>
+      <canvas id="statsChart" height="180"></canvas>
     </div>
   </div>
 
@@ -983,6 +1008,9 @@
     </div>
   </div>
 
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
   <script>
     // Initialize Telegram WebApp API
     const tg = window.Telegram ? window.Telegram.WebApp : null;
@@ -1003,6 +1031,7 @@
     // Current Active Filter State
     let currentFilter = 'today';
     let habitsCache = [];
+    let statsChartInstance = null;
 
     // Weekdays Mapping to Uzbekistan Dates
     const WEEKDAYS_MAP = {
@@ -1072,7 +1101,21 @@
         document.querySelectorAll('.calendar-grid .day-cell').forEach(c => c.classList.remove('active'));
         
         currentFilter = btn.getAttribute('data-filter');
-        renderHabits();
+
+        // Show/hide stats panel vs habits list
+        const isStats = currentFilter === 'stats';
+        document.getElementById('habitsContainer').style.display = isStats ? 'none' : '';
+        document.getElementById('statsPanel').style.display = isStats ? 'block' : 'none';
+        const sectionTitle = document.querySelector('.section-title');
+        if (sectionTitle) sectionTitle.style.display = isStats ? 'none' : '';
+        const fab = document.querySelector('.fab-btn');
+        if (fab) fab.style.display = isStats ? 'none' : '';
+
+        if (isStats) {
+          loadStats();
+        } else {
+          renderHabits();
+        }
       });
     });
 
@@ -1580,6 +1623,113 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+    }
+
+    // ── Statistics Functions ──────────────────────────────────────────────────
+
+    async function loadStats() {
+      if (!userId) {
+        document.getElementById('streakCards').innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px;">Telegram ID aniqlanmadi.</p>';
+        return;
+      }
+      try {
+        const response = await fetch(`/api/habits/stats?userId=${userId}`);
+        const data = await response.json();
+        renderStreakCards(data.habitStats || []);
+        renderStatsChart(data.dailyStats || []);
+      } catch (err) {
+        console.error('Stats load error:', err);
+      }
+    }
+
+    function renderStreakCards(habitStats) {
+      const container = document.getElementById('streakCards');
+      if (!habitStats || habitStats.length === 0) {
+        container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px;">Hali bajarilgan odat yo\'q.</p>';
+        return;
+      }
+      container.innerHTML = habitStats.map(h => {
+        const streakEmoji = h.streak >= 7 ? '🔥' : h.streak >= 3 ? '⚡' : '';
+        const streakColor = h.streak >= 7 ? '#f59e0b' : h.streak >= 3 ? '#8b5cf6' : '#64748b';
+        return `
+          <div class="glass-card" style="padding:16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-weight:700;font-size:14px;color:#e2e8f0;margin-bottom:4px;">${escapeHtml(h.name)}</div>
+              <div style="font-size:12px;color:#94a3b8;">Jami bajarilgan: <b style="color:#a78bfa;">${h.totalCompleted}</b> marta</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:26px;font-weight:900;color:${streakColor};line-height:1;">${h.streak}${streakEmoji}</div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:2px;">kun streak</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderStatsChart(dailyStats) {
+      const canvas = document.getElementById('statsChart');
+      if (!canvas || !window.Chart) return;
+
+      const labels = dailyStats.map(d => {
+        const parts = d.date.split('-');
+        return `${parts[2]}/${parts[1]}`;
+      });
+      const data = dailyStats.map(d => d.percent);
+      const bgColors = data.map(v => v === null ? 'rgba(100,116,139,0.2)' : v >= 80 ? 'rgba(16,185,129,0.7)' : v >= 50 ? 'rgba(245,158,11,0.7)' : 'rgba(239,68,68,0.55)');
+
+      if (statsChartInstance) {
+        statsChartInstance.destroy();
+        statsChartInstance = null;
+      }
+
+      statsChartInstance = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Bajarilish %',
+            data,
+            backgroundColor: bgColors,
+            borderRadius: 6,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              ticks: { color: '#94a3b8', font: { size: 10 }, callback: v => v + '%' },
+              grid: { color: 'rgba(148,163,184,0.1)' },
+            },
+            x: {
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 9 },
+                maxRotation: 90,
+                autoSkip: true,
+                maxTicksLimit: 10,
+              },
+              grid: { display: false },
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ctx.raw === null ? 'Rejalanmagan' : `${ctx.raw}% bajarildi`,
+              }
+            }
+          }
+        }
+      });
+    }
+
+    async function exportCSV() {
+      if (!userId) return alert('Telegram ID aniqlanmadi.');
+      window.open(`/api/habits/export?userId=${userId}`, '_blank');
     }
 
     // Start App Initialization

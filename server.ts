@@ -1,8 +1,8 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
-import { getHabits, getUsers, findHabitById, updateHabit, addHabit, deleteHabit, toggleUserNotifications, getUser } from './database';
-import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion, calculateNextDueDateFromStartDate } from './utils';
+import { getHabits, getUsers, findHabitById, updateHabit, addHabit, deleteHabit, toggleUserNotifications, getUser, addCompletionRecord } from './database';
+import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion, calculateNextDueDateFromStartDate, isHabitScheduledOnDate } from './utils';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
@@ -74,7 +74,11 @@ export function startWebServer(): void {
           await updateHabit(uId, habitId, {
             lastCompletedAt: todayStr,
             nextDueDate,
+            pendingReminderTimes: [],
           });
+
+          // Record completion and update streak
+          await addCompletionRecord(uId, habitId, todayStr);
 
           res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify({ success: true, nextDueDate }));
@@ -248,6 +252,69 @@ export function startWebServer(): void {
           res.end(JSON.stringify({ error: err.message }));
         }
       });
+      return;
+    }
+
+    // API Endpoint: /api/habits/stats
+    if (pathname === '/api/habits/stats' && req.method === 'GET') {
+      const userIdParam = parsedUrl.searchParams.get('userId');
+      if (!userIdParam) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ error: 'Missing userId' }));
+        return;
+      }
+      const uId = parseInt(userIdParam, 10);
+      const habits = getHabits(uId);
+      const now = getUzbekistanDate();
+      const days: string[] = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+      }
+      const dailyStats = days.map((dateStr) => {
+        const scheduled = habits.filter((h) => isHabitScheduledOnDate(h, dateStr));
+        const completed = scheduled.filter((h) => h.completionHistory && h.completionHistory.includes(dateStr));
+        return {
+          date: dateStr,
+          scheduled: scheduled.length,
+          completed: completed.length,
+          percent: scheduled.length > 0 ? Math.round((completed.length / scheduled.length) * 100) : null,
+        };
+      });
+      const habitStats = habits.map((h) => ({
+        id: h.id,
+        name: h.name,
+        streak: h.streak || 0,
+        totalCompleted: (h.completionHistory || []).length,
+        lastCompleted: h.lastCompletedAt || null,
+      }));
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ dailyStats, habitStats }));
+      return;
+    }
+
+    // API Endpoint: /api/habits/export (CSV)
+    if (pathname === '/api/habits/export' && req.method === 'GET') {
+      const userIdParam = parsedUrl.searchParams.get('userId');
+      if (!userIdParam) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ error: 'Missing userId' }));
+        return;
+      }
+      const uId = parseInt(userIdParam, 10);
+      const habits = getHabits(uId);
+      const csvRows: string[] = ['Odat nomi,Interval,Vaqt,Streak,Jami bajarilgan,Bajarilgan sanalar'];
+      for (const h of habits) {
+        const history = (h.completionHistory || []).join('; ');
+        csvRows.push(`"${h.name}","${h.intervalDescription || h.intervalType}",${h.targetTime},${h.streak || 0},${(h.completionHistory || []).length},"${history}"`);
+      }
+      const csv = '\uFEFF' + csvRows.join('\n');
+      res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="odatlar.csv"',
+        'Access-Control-Allow-Origin': '*',
+      });
+      res.end(csv);
       return;
     }
 
