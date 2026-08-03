@@ -150,7 +150,9 @@ async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean 
   let totalScheduledInWeek = 0;
 
   days.forEach((dayInfo) => {
-    const dayHabits = userHabits.filter((h) => isHabitScheduledOnDate(h, dayInfo.dateStr));
+    const dayHabits = userHabits
+      .filter((h) => isHabitScheduledOnDate(h, dayInfo.dateStr))
+      .sort((a, b) => a.targetTime.localeCompare(b.targetTime));
 
     if (dayHabits.length > 0) {
       totalScheduledInWeek += dayHabits.length;
@@ -263,7 +265,9 @@ bot.action('filter_today', async (ctx: any) => {
   const userId = ctx.from.id;
   const habits = getHabits(userId);
   const todayStr = getTodayDateString();
-  const todayHabits = habits.filter((h) => isHabitForToday(h.nextDueDate, todayStr));
+  const todayHabits = habits
+    .filter((h) => isHabitForToday(h.nextDueDate, todayStr))
+    .sort((a, b) => a.targetTime.localeCompare(b.targetTime));
 
   let message = `👑 📅 <b>Bugungi odatlaringiz (${formatDateUzbek(todayStr)}):</b>\n\n`;
 
@@ -307,7 +311,13 @@ bot.action(/^week_nav_(-?\d+)$/, async (ctx: any) => {
 bot.action('filter_month', async (ctx: any) => {
   const userId = ctx.from.id;
   const habits = getHabits(userId);
-  const monthHabits = habits.filter((h) => isHabitInNextDays(h.nextDueDate, 30));
+  const monthHabits = habits
+    .filter((h) => isHabitInNextDays(h.nextDueDate, 30))
+    .sort((a, b) => {
+      const dateCompare = a.nextDueDate.localeCompare(b.nextDueDate);
+      if (dateCompare !== 0) return dateCompare;
+      return a.targetTime.localeCompare(b.targetTime);
+    });
 
   let message = `🔮 📆 <b>Shu oylik rejalashtirilgan odatlaringiz:</b>\n\n`;
 
@@ -340,7 +350,11 @@ bot.action('filter_month', async (ctx: any) => {
 
 bot.action('filter_all', async (ctx: any) => {
   const userId = ctx.from.id;
-  const habits = getHabits(userId);
+  const habits = [...getHabits(userId)].sort((a, b) => {
+    const dateCompare = a.nextDueDate.localeCompare(b.nextDueDate);
+    if (dateCompare !== 0) return dateCompare;
+    return a.targetTime.localeCompare(b.targetTime);
+  });
 
   let message = `💎 📋 <b>Barcha odatlaringiz ro'yxati (${habits.length} ta):</b>\n\n`;
 
@@ -403,11 +417,57 @@ bot.action(/^view_(.+)$/, async (ctx: any) => {
   message += `<b>Qolgan vaqt:</b> <i>${remainingText}</i>\n`;
 
   const keyboard = Markup.inlineKeyboard([
+    [Markup.button.callback('✍️ ⚙️ Tahrirlash', `edit_menu_${habit.id}`)],
     [Markup.button.callback('🔥 🗑 O\'chirish', `delete_${habit.id}`)],
     [Markup.button.callback('🔙 ◀️ Orqaga', 'list_habits')],
   ]);
 
   await ctx.editMessageText(message, { parse_mode: 'HTML', ...keyboard });
+  await ctx.answerCbQuery();
+});
+
+bot.action(/^edit_menu_([a-zA-Z0-9-]+)$/, async (ctx: any) => {
+  const habitId = ctx.match[1];
+  const habitInfo = findHabitById(habitId);
+
+  if (!habitInfo) {
+    await ctx.answerCbQuery("Odat topilmadi!");
+    return;
+  }
+
+  const { habit } = habitInfo;
+  let message = `✍️ ⚙️ <b>Odatni tahrirlash:</b> "${escapeHtml(habit.name)}"\n\n`;
+  message += `Qaysi maydonni o'zgartirmoqchisiz?`;
+
+  const keyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.callback('📝 Nomini o\'zgartirish', `edit_name_${habit.id}`),
+      Markup.button.callback('⏰ Soatini o\'zgartirish', `edit_time_${habit.id}`),
+    ],
+    [Markup.button.callback('🔙 Orqaga', `view_${habit.id}`)],
+  ]);
+
+  await ctx.editMessageText(message, { parse_mode: 'HTML', ...keyboard });
+  await ctx.answerCbQuery();
+});
+
+bot.action(/^edit_name_([a-zA-Z0-9-]+)$/, async (ctx: any) => {
+  const habitId = ctx.match[1];
+  const userId = ctx.from.id;
+
+  await setUserCreationState(userId, { step: 'EDITING_NAME', habitId });
+
+  await ctx.reply("📝 <b>Odat uchun yangi nom kiriting:</b>\n\nMasalan: <i>Har kuni yugurish, 2 litr suv ichish</i>", { parse_mode: 'HTML' });
+  await ctx.answerCbQuery();
+});
+
+bot.action(/^edit_time_([a-zA-Z0-9-]+)$/, async (ctx: any) => {
+  const habitId = ctx.match[1];
+  const userId = ctx.from.id;
+
+  await setUserCreationState(userId, { step: 'EDITING_TIME', habitId });
+
+  await ctx.reply("⏰ <b>Odat uchun vaqtni kiriting (HH:mm formatida):</b>\n\nMasalan: <code>09:00</code> yoki <code>22:15</code>", { parse_mode: 'HTML' });
   await ctx.answerCbQuery();
 });
 
@@ -732,6 +792,84 @@ bot.on('text', async (ctx: any) => {
   const userId = ctx.from.id;
   const text = ctx.message.text.trim();
   const state = await getUserCreationState(userId);
+
+  if (state && state.step === 'EDITING_NAME') {
+    const habitInfo = findHabitById(state.habitId);
+    if (!habitInfo) {
+      await setUserCreationState(userId, null);
+      await ctx.reply("❌ Odat topilmadi yoki o'chirib yuborilgan.", mainMenuKeyboard);
+      return;
+    }
+    const oldName = habitInfo.habit.name;
+    await updateHabit(userId, state.habitId, { name: text });
+    await setUserCreationState(userId, null);
+
+    const updatedInfo = findHabitById(state.habitId);
+    let msg = `✅ <b>Odat nomi muvaffaqiyatli o'zgartirildi!</b>\n\n`;
+    msg += `📝 <b>Eski nom:</b> <s>${escapeHtml(oldName)}</s>\n`;
+    msg += `📌 <b>Yangi nom:</b> <b>${escapeHtml(text)}</b>\n\n`;
+
+    if (updatedInfo) {
+      const { habit } = updatedInfo;
+      const remainingText = getDaysRemainingText(habit.nextDueDate);
+      msg += `📌 📍 👑 <b>Odat batafsil ma'lumotlari:</b>\n\n`;
+      msg += `<b>Nomi:</b> ${escapeHtml(habit.name)}\n`;
+      msg += `<b>Takrorlanish turi:</b> ${getPrettyIntervalName(habit)}\n`;
+      msg += `<b>Eslatma soati:</b> <code>${habit.targetTime}</code>\n`;
+      msg += `<b>Keyingi bajarish kuni:</b> ${formatDateWithWeekday(habit.nextDueDate)}\n`;
+      msg += `<b>Qolgan vaqt:</b> <i>${remainingText}</i>\n`;
+    }
+
+    const keyboard = Markup.inlineKeyboard([
+      [Markup.button.callback('✍️ ⚙️ Tahrirlash', `edit_menu_${state.habitId}`)],
+      [Markup.button.callback('🔥 🗑 O\'chirish', `delete_${state.habitId}`)],
+      [Markup.button.callback('🔙 ◀️ Orqaga', 'list_habits')],
+    ]);
+
+    await ctx.reply(msg, { parse_mode: 'HTML', ...keyboard });
+    return;
+  }
+
+  if (state && state.step === 'EDITING_TIME') {
+    if (!isValidTimeFormat(text)) {
+      await ctx.reply("⚠️ Noto'g'ri vaqt formati. Iltimos, vaqtni <b>HH:mm</b> formatida kiriting (masalan: <code>08:00</code>):", { parse_mode: 'HTML' });
+      return;
+    }
+    const habitInfo = findHabitById(state.habitId);
+    if (!habitInfo) {
+      await setUserCreationState(userId, null);
+      await ctx.reply("❌ Odat topilmadi yoki o'chirib yuborilgan.", mainMenuKeyboard);
+      return;
+    }
+    const oldTime = habitInfo.habit.targetTime;
+    await updateHabit(userId, state.habitId, { targetTime: text });
+    await setUserCreationState(userId, null);
+
+    const updatedInfo = findHabitById(state.habitId);
+    let msg = `✅ <b>Odat eslatma vaqti muvaffaqiyatli o'zgartirildi!</b>\n\n`;
+    msg += `⏰ <b>Eski vaqt:</b> <s>${oldTime}</s>\n`;
+    msg += `⚡️ <b>Yangi vaqt:</b> <code>${text}</code>\n\n`;
+
+    if (updatedInfo) {
+      const { habit } = updatedInfo;
+      const remainingText = getDaysRemainingText(habit.nextDueDate);
+      msg += `📌 📍 👑 <b>Odat batafsil ma'lumotlari:</b>\n\n`;
+      msg += `<b>Nomi:</b> ${escapeHtml(habit.name)}\n`;
+      msg += `<b>Takrorlanish turi:</b> ${getPrettyIntervalName(habit)}\n`;
+      msg += `<b>Eslatma soati:</b> <code>${habit.targetTime}</code>\n`;
+      msg += `<b>Keyingi bajarish kuni:</b> ${formatDateWithWeekday(habit.nextDueDate)}\n`;
+      msg += `<b>Qolgan vaqt:</b> <i>${remainingText}</i>\n`;
+    }
+
+    const keyboard = Markup.inlineKeyboard([
+      [Markup.button.callback('✍️ ⚙️ Tahrirlash', `edit_menu_${state.habitId}`)],
+      [Markup.button.callback('🔥 🗑 O\'chirish', `delete_${state.habitId}`)],
+      [Markup.button.callback('🔙 ◀️ Orqaga', 'list_habits')],
+    ]);
+
+    await ctx.reply(msg, { parse_mode: 'HTML', ...keyboard });
+    return;
+  }
 
   if (!state) {
     if (!text.startsWith('/')) {
