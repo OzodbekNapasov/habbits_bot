@@ -54,10 +54,7 @@
           "nextDueDate": "2026-08-03"
         }
       ],
-      "creationState": {
-        "step": "EDITING_TIME",
-        "habitId": "fc39a883-cf67-42f3-926e-223869d5e575"
-      }
+      "creationState": null
     },
     {
       "id": 5657200575,
