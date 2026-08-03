@@ -35,7 +35,9 @@
         "name": "Kitob o'qish bo'yicha",
         "intervalType": "kunlik",
         "intervalDescription": "Har kuni",
-        "restDays": []
+        "restDays": [
+          "Ya"
+        ]
       }
     },
     {
