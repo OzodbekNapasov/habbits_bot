@@ -42,7 +42,11 @@
           "lastCompletedAt": "2026-08-03",
           "nextDueDate": "2026-08-04",
           "lastNotifiedDueDate": "2026-08-03_15:00",
-          "pendingReminderTimes": []
+          "pendingReminderTimes": [],
+          "completionHistory": [
+            "2026-08-03"
+          ],
+          "streak": 1
         }
       ],
       "creationState": null
