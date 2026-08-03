@@ -31,13 +31,14 @@
         }
       ],
       "creationState": {
-        "step": "WAITING_TIME",
+        "step": "WAITING_START_DATE",
         "name": "Kitob o'qish bo'yicha",
         "intervalType": "kunlik",
         "intervalDescription": "Har kuni",
         "restDays": [
           "Ya"
-        ]
+        ],
+        "targetTime": "15:00"
       }
     },
     {
