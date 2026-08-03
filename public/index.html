@@ -2,33 +2,38 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Odatlar Trekeri — Mini App</title>
-  <!-- Telegram WebApp Script -->
+  
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Google Fonts (Inter) -->
+  
+  <!-- Google Fonts: Plus Jakarta Sans for premium typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
+    /* Styling variables */
     :root {
-      --bg-color: #0f172a;
-      --card-bg: rgba(30, 41, 59, 0.7);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --accent-color: #3b82f6;
-      --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-color: #080b11;
+      --card-bg: rgba(17, 24, 39, 0.6);
+      --card-border: rgba(255, 255, 255, 0.07);
+      --accent-color: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
       --success-color: #10b981;
-      --warning-color: #f59e0b;
+      --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --danger-color: #ef4444;
+      --glow-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -40,270 +45,382 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+      overflow-x: hidden;
+      position: relative;
     }
 
-    /* Header Profile Card */
-    .header-card {
+    /* Ambient glowing background blobs */
+    .bg-glow-1 {
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -50px;
+      right: -50px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .bg-glow-2 {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: 50px;
+      left: -100px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Glassmorphic Cards container */
+    .glass-card {
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--card-border);
       border-radius: 20px;
-      padding: 20px;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Profile Header Layout */
+    .header-card {
+      padding: 18px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     }
 
-    .user-info {
+    .profile-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #fff;
+      box-shadow: var(--glow-shadow);
+    }
+
+    .user-meta {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
     .user-name {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      background: var(--accent-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #fff;
     }
 
     .user-subtitle {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
 
     .streak-badge {
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      color: #fbbf24;
-      padding: 8px 14px;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.9rem;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      color: #f59e0b;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.85rem;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    /* Stats Overview Card */
+    /* Stats Overview Layout */
     .stats-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
+    }
+
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .stats-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
     }
 
-    .progress-bar-bg {
-      background: rgba(255, 255, 255, 0.1);
-      height: 12px;
-      border-radius: 6px;
+    .progress-percent {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--success-color);
+      text-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    }
+
+    .progress-container {
+      background: rgba(255, 255, 255, 0.05);
+      height: 10px;
+      border-radius: 5px;
       overflow: hidden;
     }
 
-    .progress-bar-fill {
-      background: var(--accent-gradient);
+    .progress-fill {
+      background: var(--success-gradient);
       height: 100%;
       width: 0%;
-      transition: width 0.6s ease;
+      border-radius: 5px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
     }
 
-    /* Week Day Calendar Grid */
+    /* Calendar Grid Layout */
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 6px;
-      margin-top: 8px;
+      margin-top: 4px;
     }
 
     .day-cell {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      border-radius: 12px;
       padding: 8px 4px;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }
 
     .day-cell.active {
-      background: rgba(59, 130, 246, 0.2);
-      border: 1px solid rgba(59, 130, 246, 0.5);
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
     }
 
     .day-name {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
     }
 
-    .day-status {
-      width: 8px;
-      height: 8px;
+    .day-dot {
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
     }
 
-    .day-status.completed {
+    .day-dot.completed {
       background: var(--success-color);
-      box-shadow: 0 0 8px var(--success-color);
+      box-shadow: 0 0 6px var(--success-color);
+    }
+
+    /* Horizontal Filter Navigation */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 4px;
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+      display: none; /* Safari & Chrome */
+    }
+
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-gradient);
+      color: #fff;
+      border: 1px solid transparent;
+      box-shadow: var(--glow-shadow);
     }
 
     /* Section Title */
     .section-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
-      margin-top: 6px;
+      color: #fff;
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 0 4px;
     }
 
-    /* Habits List */
+    /* Habits List Layout */
     .habits-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
-    .habit-item {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
+    .habit-card {
       padding: 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, background 0.2s ease;
     }
 
-    .habit-item:active {
+    .habit-card:active {
       transform: scale(0.98);
     }
 
-    .habit-details {
+    .habit-info {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 8px;
+      max-width: 55%;
     }
 
     .habit-name {
-      font-size: 1rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.35;
+      word-wrap: break-word;
     }
 
-    .habit-meta {
-      font-size: 0.8rem;
-      color: var(--text-muted);
+    .habit-tags {
       display: flex;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
-    .habit-tag {
+    .tag {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tag svg {
+      width: 12px;
+      height: 12px;
+      stroke: var(--text-muted);
+      fill: none;
+    }
+
+    /* Interactive Action Buttons */
+    .action-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-done {
+      background: var(--success-gradient);
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-done:active {
+      transform: scale(0.95);
+    }
+
+    .btn-skip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    .btn-skip:active {
+      transform: scale(0.95);
       background: rgba(255, 255, 255, 0.08);
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 0.75rem;
+    }
+
+    .badge-completed {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--success-color);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.1);
     }
 
     .empty-state {
       text-align: center;
-      padding: 40px 20px;
+      padding: 48px 24px;
       color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    /* Habit action buttons */
-    .habit-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .action-btn {
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
       font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-    }
-
-    .action-btn:active {
-      transform: scale(0.95);
-    }
-
-    .done-btn {
-      background-color: var(--success-color);
-      color: white;
-    }
-
-    .done-btn:hover {
-      background-color: #059669;
-    }
-
-    .skip-btn {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: var(--text-muted);
-      border: 1px solid var(--card-border);
-    }
-
-    .skip-btn:hover {
-      background-color: rgba(255, 255, 255, 0.15);
-    }
-
-    .status-completed {
-      color: var(--success-color);
-      font-weight: 600;
-      font-size: 0.9rem;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 12px;
     }
 
-    /* Floating Action Button */
-    .fab-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: var(--accent-gradient);
-      color: #fff;
-      border: none;
-      border-radius: 30px;
-      padding: 14px 24px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
+    .empty-state svg {
+      width: 44px;
+      height: 44px;
+      stroke: var(--text-muted);
+      opacity: 0.5;
     }
   </style>
 </head>
 <body>
 
+  <!-- Background Decorative Glowing Blurs -->
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
   <!-- Profile Header Card -->
-  <div class="header-card">
-    <div class="user-info">
-      <div class="user-name" id="userName">Foydalanuvchi</div>
-      <div class="user-subtitle">Shaxsiy Odatlar Boshqaruvi</div>
+  <div class="glass-card header-card">
+    <div class="profile-info">
+      <div class="avatar" id="userAvatar">O</div>
+      <div class="user-meta">
+        <div class="user-name" id="userName">Ozodbek</div>
+        <div class="user-subtitle">Shaxsiy Odatlar Boshqaruvi</div>
+      </div>
     </div>
     <div class="streak-badge">
       🔥 <span id="streakCount">1</span> kun
@@ -311,35 +428,48 @@
   </div>
 
   <!-- Overall Statistics Progress Card -->
-  <div class="stats-card">
-    <div class="stats-title">
-      <span>Bugungi Natija</span>
-      <span id="progressPercent">0%</span>
+  <div class="glass-card stats-card">
+    <div class="stats-header">
+      <span class="stats-title">Bugungi Natija</span>
+      <span class="progress-percent" id="progressPercent">0%</span>
     </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progressBar"></div>
+    
+    <div class="progress-container">
+      <div class="progress-fill" id="progressBar"></div>
     </div>
 
-    <!-- 7-Day Activity Grid -->
+    <!-- 7-Day Activity Grid (Du - Ya) -->
     <div class="calendar-grid">
-      <div class="day-cell"><span class="day-name">Du</span><div class="day-status completed"></div></div>
-      <div class="day-cell"><span class="day-name">Se</span><div class="day-status completed"></div></div>
-      <div class="day-cell"><span class="day-name">Ch</span><div class="day-status completed"></div></div>
-      <div class="day-cell"><span class="day-name">Pa</span><div class="day-status completed"></div></div>
-      <div class="day-cell"><span class="day-name">Ju</span><div class="day-status completed"></div></div>
-      <div class="day-cell active"><span class="day-name">Sh</span><div class="day-status completed"></div></div>
-      <div class="day-cell"><span class="day-name">Ya</span><div class="day-status"></div></div>
+      <div class="day-cell" id="day-0"><span class="day-name">Du</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-1"><span class="day-name">Se</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-2"><span class="day-name">Ch</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-3"><span class="day-name">Pa</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-4"><span class="day-name">Ju</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-5"><span class="day-name">Sh</span><div class="day-dot"></div></div>
+      <div class="day-cell" id="day-6"><span class="day-name">Ya</span><div class="day-dot"></div></div>
     </div>
   </div>
 
-  <!-- Section Title -->
+  <!-- Horizontal Filter Tabs Menu -->
+  <div class="filter-tabs" id="filterTabs">
+    <button class="tab-btn active" data-filter="today">📅 Bugun</button>
+    <button class="tab-btn" data-filter="tomorrow">🌅 Ertaga</button>
+    <button class="tab-btn" data-filter="week">🗓 Hafta</button>
+    <button class="tab-btn" data-filter="month">📅 Oy</button>
+    <button class="tab-btn" data-filter="all">📋 Barchasi</button>
+  </div>
+
+  <!-- Section Header -->
   <div class="section-title">
-    📋 Sizning Odatlaringiz
+    📋 Odatlar ro'yxati
   </div>
 
   <!-- Habits List Container -->
   <div class="habits-list" id="habitsContainer">
-    <div class="empty-state">Odatlar yuklanmoqda...</div>
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      Odatlar yuklanmoqda...
+    </div>
   </div>
 
   <script>
@@ -351,62 +481,221 @@
     }
 
     const userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
-    const userName = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : 'Foydalanuvchi';
-
+    const userName = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : 'Ozodbek';
+    
+    // Set Profile Header Values
     document.getElementById('userName').textContent = userName;
+    if (userName && userName.length > 0) {
+      document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
+    }
 
-    async function loadHabits() {
-      const container = document.getElementById('habitsContainer');
+    // Current Active Filter State
+    let currentFilter = 'today';
+    let habitsCache = [];
+
+    // Helper to calculate Uzbekistan local ISO date strings (Asia/Tashkent offset +05:00)
+    function getUzbekistanDateString(date = new Date()) {
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Tashkent',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      return formatter.format(date); // Format: YYYY-MM-DD
+    }
+
+    // Set Active State to Current Day in Calendar Header
+    const currentDayUz = new Date().getDay(); // 0 is Sunday, 1 is Monday...
+    const uzDayIndex = currentDayUz === 0 ? 6 : currentDayUz - 1; // Map to 0-6 (Du-Ya)
+    const activeCell = document.getElementById(`day-${uzDayIndex}`);
+    if (activeCell) {
+      activeCell.classList.add('active');
+    }
+
+    // Bind Event Handlers to Filter Tabs
+    const tabButtons = document.querySelectorAll('#filterTabs .tab-btn');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        tabButtons.forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.getAttribute('data-filter');
+        renderHabits();
+      });
+    });
+
+    // Fetches the entire list of user habits and triggers rendering
+    async function fetchUserHabits() {
       try {
         const queryParam = userId ? `?userId=${userId}` : '';
         const response = await fetch(`/api/habits${queryParam}`);
         const data = await response.json();
-
-        if (!data.habits || data.habits.length === 0) {
-          container.innerHTML = `<div class="empty-state">Sizda hali hech qanday odat yo'q. Telegram botda "➕ Yangi odat" tugmasini bosing.</div>`;
-          document.getElementById('progressPercent').textContent = '0%';
-          document.getElementById('progressBar').style.width = '0%';
-          return;
-        }
-
-        let completedCount = 0;
-        container.innerHTML = '';
-
-        data.habits.forEach(habit => {
-          const isCompletedToday = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(new Date().toISOString().split('T')[0]);
-          if (isCompletedToday) completedCount++;
-
-          const item = document.createElement('div');
-          item.className = 'habit-item';
-          item.innerHTML = `
-            <div class="habit-details">
-              <div class="habit-name">${habit.name}</div>
-              <div class="habit-meta">
-                <span class="habit-tag">📋 ${habit.intervalDescription || habit.intervalType}</span>
-                <span class="habit-tag">⏰ ${habit.targetTime}</span>
-              </div>
-            </div>
-            <div class="habit-actions">
-              ${isCompletedToday 
-                ? `<span class="status-completed">✅ Bajarildi</span>` 
-                : `<button class="action-btn done-btn" onclick="completeHabit('${habit.id}')">Bajarildi</button>
-                   <button class="action-btn skip-btn" onclick="skipHabit('${habit.id}')">Qoldirish</button>`
-              }
-            </div>
-          `;
-          container.appendChild(item);
-        });
-
-        const percent = Math.round((completedCount / data.habits.length) * 100);
-        document.getElementById('progressPercent').textContent = `${percent}%`;
-        document.getElementById('progressBar').style.width = `${percent}%`;
-
+        
+        habitsCache = data.habits || [];
+        renderHabits();
+        renderStats();
       } catch (err) {
         console.error('Odatlarni yuklashda xatolik:', err);
-        container.innerHTML = `<div class="empty-state">Ma'lumotlarni yuklashda xatolik yuz berdi.</div>`;
+        const container = document.getElementById('habitsContainer');
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            Ma'lumotlarni yuklashda xatolik yuz berdi.
+          </div>`;
       }
     }
 
+    // Renders the statistics card progress bar and week circles
+    function renderStats() {
+      if (habitsCache.length === 0) {
+        document.getElementById('progressPercent').textContent = '0%';
+        document.getElementById('progressBar').style.width = '0%';
+        return;
+      }
+
+      const todayStr = getUzbekistanDateString();
+      let totalToday = 0;
+      let completedToday = 0;
+
+      habitsCache.forEach(habit => {
+        const isCompletedToday = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(todayStr);
+        const isScheduledToday = habit.nextDueDate === todayStr || isCompletedToday;
+        
+        if (isScheduledToday) {
+          totalToday++;
+          if (isCompletedToday) {
+            completedToday++;
+          }
+        }
+      });
+
+      const percent = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
+      document.getElementById('progressPercent').textContent = `${percent}%`;
+      document.getElementById('progressBar').style.width = `${percent}%`;
+
+      // Update 7-Day calendar dots depending on completions today
+      const dot = document.querySelector(`#day-${uzDayIndex} .day-dot`);
+      if (dot) {
+        if (completedToday > 0 && completedToday === totalToday) {
+          dot.classList.add('completed');
+        } else {
+          dot.classList.remove('completed');
+        }
+      }
+    }
+
+    // Dynamic Client-side Filtering and Sorting logic
+    function renderHabits() {
+      const container = document.getElementById('habitsContainer');
+      const todayStr = getUzbekistanDateString();
+      
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = getUzbekistanDateString(tomorrow);
+
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+      
+      // Filter subsets
+      let filtered = [];
+      
+      if (currentFilter === 'today') {
+        filtered = habitsCache.filter(habit => {
+          const isCompletedToday = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(todayStr);
+          return habit.nextDueDate === todayStr || isCompletedToday;
+        });
+        // Sort by time
+        filtered.sort((a, b) => a.targetTime.localeCompare(b.targetTime));
+        
+      } else if (currentFilter === 'tomorrow') {
+        filtered = habitsCache.filter(habit => habit.nextDueDate === tomorrowStr);
+        // Sort by time
+        filtered.sort((a, b) => a.targetTime.localeCompare(b.targetTime));
+        
+      } else if (currentFilter === 'week') {
+        const weekEnd = new Date(todayStart);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        weekEnd.setHours(23, 59, 59, 999);
+
+        filtered = habitsCache.filter(habit => {
+          const habitDate = new Date(`${habit.nextDueDate}T00:00:00`);
+          return habitDate >= todayStart && habitDate <= weekEnd;
+        });
+        // Sort by date, then time
+        filtered.sort((a, b) => {
+          const dateCompare = a.nextDueDate.localeCompare(b.nextDueDate);
+          if (dateCompare !== 0) return dateCompare;
+          return a.targetTime.localeCompare(b.targetTime);
+        });
+        
+      } else if (currentFilter === 'month') {
+        const monthEnd = new Date(todayStart);
+        monthEnd.setDate(monthEnd.getDate() + 30);
+        monthEnd.setHours(23, 59, 59, 999);
+
+        filtered = habitsCache.filter(habit => {
+          const habitDate = new Date(`${habit.nextDueDate}T00:00:00`);
+          return habitDate >= todayStart && habitDate <= monthEnd;
+        });
+        // Sort by date, then time
+        filtered.sort((a, b) => {
+          const dateCompare = a.nextDueDate.localeCompare(b.nextDueDate);
+          if (dateCompare !== 0) return dateCompare;
+          return a.targetTime.localeCompare(b.targetTime);
+        });
+        
+      } else {
+        filtered = [...habitsCache];
+        // Sort by date, then time
+        filtered.sort((a, b) => {
+          const dateCompare = a.nextDueDate.localeCompare(b.nextDueDate);
+          if (dateCompare !== 0) return dateCompare;
+          return a.targetTime.localeCompare(b.targetTime);
+        });
+      }
+
+      // Empty State layout
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            Ushbu bo'limda hech qanday odat topilmadi.
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      filtered.forEach(habit => {
+        const isCompletedToday = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(todayStr);
+
+        const card = document.createElement('div');
+        card.className = 'glass-card habit-card';
+        card.innerHTML = `
+          <div class="habit-info">
+            <div class="habit-name">${escapeHtml(habit.name)}</div>
+            <div class="habit-tags">
+              <span class="tag">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                ${habit.intervalDescription || habit.intervalType}
+              </span>
+              <span class="tag">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                ${habit.targetTime}
+              </span>
+            </div>
+          </div>
+          <div class="action-group">
+            ${isCompletedToday 
+              ? `<span class="badge-completed">✅ Bajarildi</span>` 
+              : `<button class="btn btn-done" onclick="completeHabit('${habit.id}')">Bajarildi</button>
+                 <button class="btn btn-skip" onclick="skipHabit('${habit.id}')">Qoldirish</button>`
+            }
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Mark habit as Done API call
     async function completeHabit(habitId) {
       if (!userId) return alert("Telegram ID aniqlanmadi.");
       try {
@@ -417,7 +706,7 @@
         });
         const resData = await response.json();
         if (resData.success) {
-          loadHabits();
+          await fetchUserHabits();
         } else {
           alert("Xatolik yuz berdi: " + (resData.error || "Noma'lum xato"));
         }
@@ -427,6 +716,7 @@
       }
     }
 
+    // Skip habit API call
     async function skipHabit(habitId) {
       if (!userId) return alert("Telegram ID aniqlanmadi.");
       try {
@@ -437,7 +727,7 @@
         });
         const resData = await response.json();
         if (resData.success) {
-          loadHabits();
+          await fetchUserHabits();
         } else {
           alert("Xatolik yuz berdi: " + (resData.error || "Noma'lum xato"));
         }
@@ -447,7 +737,18 @@
       }
     }
 
-    loadHabits();
+    // Simple HTML escaping helper to prevent XSS
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Start App Initialization
+    fetchUserHabits();
   </script>
 </body>
 </html>
