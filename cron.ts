@@ -27,14 +27,14 @@ export async function triggerDailyDigest(bot: Telegraf<any>, targetUserId?: numb
     const todayHabits = user.habits.filter((h) => isHabitForToday(h.nextDueDate, todayStr));
 
     const quote = getRandomQuote();
-    let message = `☀️ 💫 <b>Xayrli tong! Bugungi muhim kunlik rejalaringiz:</b>\n\n`;
+    let message = `☀️ <b>Xayrli tong! Bugungi rejalashtirilgan odatlaringiz:</b>\n\n`;
 
     if (todayHabits.length > 0) {
       todayHabits.forEach((habit) => {
-        message += `  ⚡️ <b>${habit.name}</b> — ⏰ Soat <code>${habit.targetTime}</code> da\n`;
+        message += `  📌 <b>${habit.name}</b> — ⏰ Soat <code>${habit.targetTime}</code>\n`;
       });
     } else {
-      message += `✨ Bugun uchun maxsus eslatma yo'q. Kuningiz unumli, omadli va maroqli o'tsin!\n`;
+      message += `Bugun uchun rejalashtirilgan odatlar yo'q. Kuningiz xayrli o'tsin!\n`;
     }
 
     message += `\n💭 <i>"${quote}"</i>`;
@@ -66,9 +66,9 @@ export async function triggerWeeklyDigest(bot: Telegraf<any>): Promise<void> {
 
       if (weeklyHabits.length > 0) {
         const quote = getRandomQuote();
-        let message = `✨ 📅 <b>Yangi hafta muborak! Ushbu haftadagi asosiy rejalaringiz:</b>\n\n`;
+        let message = `📅 <b>Yangi hafta muborak! Haftalik rejalaringiz:</b>\n\n`;
         weeklyHabits.forEach((habit) => {
-          message += `  💎 <b>${habit.name}</b> — ${habit.nextDueDate} (Soat: <code>${habit.targetTime}</code> da)\n`;
+          message += `  📌 <b>${habit.name}</b> — ${habit.nextDueDate} (Soat: <code>${habit.targetTime}</code>)\n`;
         });
         message += `\n💭 <i>"${quote}"</i>`;
 
@@ -106,13 +106,13 @@ export async function runReminderCheck(bot: Telegraf<any>): Promise<void> {
         ) {
           const quote = getRandomQuote();
 
-          // Rich Premium Inline Keyboard with 3 snooze options (15m, 30m, 1h)
+          // Clean Inline Keyboard with 3 snooze options (15m, 30m, 1h)
           const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('🌟 ✅ Bajarildi', `done_${habit.id}`)],
+            [Markup.button.callback('✅ Bajarildi', `done_${habit.id}`)],
             [
-              Markup.button.callback('⚡️ ⏱ 15 min', `delay_15_${habit.id}`),
-              Markup.button.callback('⚡️ ⏱ 30 min', `delay_30_${habit.id}`),
-              Markup.button.callback('⚡️ ⏱ 1 soat', `delay_60_${habit.id}`),
+              Markup.button.callback('⏱ 15 daqiqa', `delay_15_${habit.id}`),
+              Markup.button.callback('⏱ 30 daqiqa', `delay_30_${habit.id}`),
+              Markup.button.callback('⏱ 1 soat', `delay_60_${habit.id}`),
             ],
             [Markup.button.callback('❌ Qoldirish', `skip_${habit.id}`)],
           ]);
@@ -120,7 +120,7 @@ export async function runReminderCheck(bot: Telegraf<any>): Promise<void> {
           try {
             await bot.telegram.sendMessage(
               user.id,
-              `👑 🔔 <b>Diqqat! Odat vaqti bo'ldi!</b>\n\n📌 <b>Odat nomi:</b> <b>${habit.name}</b>\n⏰ <b>Vaqt:</b> Soat <code>${habit.targetTime}</code> da\n\n💭 <i>"${quote}"</i>`,
+              `🔔 <b>Eslatma vaqti keldi!</b>\n\n📌 <b>Odat nomi:</b> <b>${habit.name}</b>\n⏰ <b>Vaqt:</b> Soat <code>${habit.targetTime}</code>\n\n💭 <i>"${quote}"</i>`,
               {
                 parse_mode: 'HTML',
                 ...keyboard,
@@ -157,7 +157,7 @@ export async function runReminderCheck(bot: Telegraf<any>): Promise<void> {
  * Initializes and starts all cron jobs for the Telegram Habit Bot locally (non-Vercel):
  */
 export function initReminderCron(bot: Telegraf<any>): void {
-  console.log('⚡️ ⏰ Odatlar eslatmasi va Dayjest cron-vazifalari (local) ishga tushirildi...');
+  console.log('⏰ Odatlar eslatmasi va Dayjest cron-vazifalari (local) ishga tushirildi...');
 
   // 1. Exact Time Reminder Job (Runs every 1 minute)
   cron.schedule('* * * * *', async () => {
