@@ -1,5 +1,6 @@
 import { bot } from '../index';
-import { loadFromGitHub, getHabits, getUsers } from '../database';
+import { loadFromGitHub, getHabits, getUsers, updateHabit, findHabitById } from '../database';
+import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion } from '../utils';
 import fs from 'fs';
 import path from 'path';
 
@@ -56,6 +57,88 @@ export default async function handler(req: any, res: any) {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({ habits });
+  }
+
+  // Serve API Endpoint: /api/habits/done
+  if (pathname === '/api/habits/done' && req.method === 'POST') {
+    await ensureInitialized();
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // ignore
+      }
+    }
+    const { userId, habitId } = body;
+    if (!userId || !habitId) {
+      return res.status(400).json({ error: 'Missing userId or habitId' });
+    }
+
+    const uId = parseInt(userId, 10);
+    const habitInfo = findHabitById(habitId);
+    if (!habitInfo) {
+      return res.status(404).json({ error: 'Habit not found' });
+    }
+
+    const { habit } = habitInfo;
+    const now = getUzbekistanDate();
+    const todayStr = getTodayDateString(now);
+    const nextDueDate = calculateNextDueDateAfterCompletion(
+      habit.intervalType,
+      habit.targetTime,
+      now,
+      habit.restDays,
+      habit.customIntervalDays
+    );
+
+    await updateHabit(uId, habitId, {
+      lastCompletedAt: todayStr,
+      nextDueDate,
+    });
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).json({ success: true, nextDueDate });
+  }
+
+  // Serve API Endpoint: /api/habits/skip
+  if (pathname === '/api/habits/skip' && req.method === 'POST') {
+    await ensureInitialized();
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // ignore
+      }
+    }
+    const { userId, habitId } = body;
+    if (!userId || !habitId) {
+      return res.status(400).json({ error: 'Missing userId or habitId' });
+    }
+
+    const uId = parseInt(userId, 10);
+    const habitInfo = findHabitById(habitId);
+    if (!habitInfo) {
+      return res.status(404).json({ error: 'Habit not found' });
+    }
+
+    const { habit } = habitInfo;
+    const now = getUzbekistanDate();
+    const nextDueDate = calculateNextDueDateAfterCompletion(
+      habit.intervalType,
+      habit.targetTime,
+      now,
+      habit.restDays,
+      habit.customIntervalDays
+    );
+
+    await updateHabit(uId, habitId, { nextDueDate });
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).json({ success: true, nextDueDate });
   }
 
   // If request is GET (e.g. Mini App UI page view), serve public/index.html

@@ -228,6 +228,55 @@
       font-size: 0.95rem;
     }
 
+    /* Habit action buttons */
+    .habit-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .action-btn {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+
+    .done-btn {
+      background-color: var(--success-color);
+      color: white;
+    }
+
+    .done-btn:hover {
+      background-color: #059669;
+    }
+
+    .skip-btn {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+    }
+
+    .skip-btn:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .status-completed {
+      color: var(--success-color);
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     /* Floating Action Button */
     .fab-btn {
       position: fixed;
@@ -257,7 +306,7 @@
       <div class="user-subtitle">Shaxsiy Odatlar Boshqaruvi</div>
     </div>
     <div class="streak-badge">
-      🔥 ⚡️ <span id="streakCount">1</span> kun
+      🔥 <span id="streakCount">1</span> kun
     </div>
   </div>
 
@@ -285,7 +334,7 @@
 
   <!-- Section Title -->
   <div class="section-title">
-    💎 📋 Sizning Odatlaringiz
+    📋 Sizning Odatlaringiz
   </div>
 
   <!-- Habits List Container -->
@@ -314,7 +363,7 @@
         const data = await response.json();
 
         if (!data.habits || data.habits.length === 0) {
-          container.innerHTML = `<div class="empty-state">Sizda hali hech qanday odat yo'q. Telegram botda "✨ ➕ Yangi odat" tugmasini bosing.</div>`;
+          container.innerHTML = `<div class="empty-state">Sizda hali hech qanday odat yo'q. Telegram botda "➕ Yangi odat" tugmasini bosing.</div>`;
           document.getElementById('progressPercent').textContent = '0%';
           document.getElementById('progressBar').style.width = '0%';
           return;
@@ -327,24 +376,24 @@
           const isCompletedToday = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(new Date().toISOString().split('T')[0]);
           if (isCompletedToday) completedCount++;
 
-          const restText = habit.restDays && habit.restDays.length > 0 ? habit.restDays.join(', ') : "Yo'q";
-
           const item = document.createElement('div');
           item.className = 'habit-item';
           item.innerHTML = `
             <div class="habit-details">
               <div class="habit-name">${habit.name}</div>
               <div class="habit-meta">
-                <span class="habit-tag">⚡️ ⏱ ${habit.intervalDescription || habit.intervalType}</span>
-                <span class="habit-tag">⏰ ⚡️ ${habit.targetTime}</span>
+                <span class="habit-tag">📋 ${habit.intervalDescription || habit.intervalType}</span>
+                <span class="habit-tag">⏰ ${habit.targetTime}</span>
               </div>
             </div>
-            <div class="habit-status">
-              ${isCompletedToday ? '🌟 ✅' : '⏳ ⏳'}
+            <div class="habit-actions">
+              ${isCompletedToday 
+                ? `<span class="status-completed">✅ Bajarildi</span>` 
+                : `<button class="action-btn done-btn" onclick="completeHabit('${habit.id}')">Bajarildi</button>
+                   <button class="action-btn skip-btn" onclick="skipHabit('${habit.id}')">Qoldirish</button>`
+              }
             </div>
           `;
-          container.appendChild(item);
-        });
           container.appendChild(item);
         });
 
@@ -355,6 +404,46 @@
       } catch (err) {
         console.error('Odatlarni yuklashda xatolik:', err);
         container.innerHTML = `<div class="empty-state">Ma'lumotlarni yuklashda xatolik yuz berdi.</div>`;
+      }
+    }
+
+    async function completeHabit(habitId) {
+      if (!userId) return alert("Telegram ID aniqlanmadi.");
+      try {
+        const response = await fetch('/api/habits/done', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, habitId })
+        });
+        const resData = await response.json();
+        if (resData.success) {
+          loadHabits();
+        } else {
+          alert("Xatolik yuz berdi: " + (resData.error || "Noma'lum xato"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Server bilan bog'lanishda xatolik yuz berdi.");
+      }
+    }
+
+    async function skipHabit(habitId) {
+      if (!userId) return alert("Telegram ID aniqlanmadi.");
+      try {
+        const response = await fetch('/api/habits/skip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, habitId })
+        });
+        const resData = await response.json();
+        if (resData.success) {
+          loadHabits();
+        } else {
+          alert("Xatolik yuz berdi: " + (resData.error || "Noma'lum xato"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Server bilan bog'lanishda xatolik yuz berdi.");
       }
     }
 

@@ -231,7 +231,7 @@ bot.hears(/(?:⚙️\s*)?Sozlamalar/, async (ctx: any) => {
 bot.hears(/(?:🌐\s*)?Mini App/, async (ctx: any) => {
   await saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
   await setUserCreationState(ctx.from.id, null);
-  const miniAppUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://habbits-bot-seven.vercel.app/';
+  const miniAppUrl = 'https://habbits-bot-seven.vercel.app/';
   const keyboard = Markup.inlineKeyboard([
     [Markup.button.webApp('🌐 Dashboard', miniAppUrl)],
   ]);
