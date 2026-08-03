@@ -54,14 +54,7 @@
           "nextDueDate": "2026-08-03"
         }
       ],
-      "creationState": {
-        "step": "WAITING_START_DATE",
-        "name": "test",
-        "intervalType": "kunlik",
-        "intervalDescription": "Har kuni",
-        "restDays": [],
-        "targetTime": "12:30"
-      }
+      "creationState": null
     },
     {
       "id": 5657200575,
