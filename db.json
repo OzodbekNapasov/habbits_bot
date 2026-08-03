@@ -31,7 +31,8 @@
         }
       ],
       "creationState": {
-        "step": "WAITING_NAME"
+        "step": "WAITING_INTERVAL",
+        "name": "Kitob o'qish bo'yicha"
       }
     },
     {
