@@ -56,7 +56,8 @@
         }
       ],
       "creationState": {
-        "step": "WAITING_NAME"
+        "step": "WAITING_INTERVAL",
+        "name": "test"
       }
     },
     {
