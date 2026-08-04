@@ -56,9 +56,10 @@
         }
       ],
       "creationState": {
-        "step": "WAITING_TIME",
+        "step": "WAITING_START_DATE",
         "name": "test",
-        "restDays": []
+        "restDays": [],
+        "targetTime": "15:46"
       }
     },
     {
