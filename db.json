@@ -53,6 +53,15 @@
             "2026-08-04"
           ],
           "streak": 2
+        },
+        {
+          "id": "153fcfa3-338e-4546-a9fb-8923865a16fc",
+          "name": "test",
+          "startDate": "2026-08-04",
+          "restDays": [],
+          "targetTime": "15:46",
+          "lastCompletedAt": null,
+          "nextDueDate": "2026-08-04"
         }
       ],
       "creationState": {
