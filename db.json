@@ -55,7 +55,9 @@
           "streak": 2
         }
       ],
-      "creationState": null
+      "creationState": {
+        "step": "WAITING_NAME"
+      }
     },
     {
       "id": 5657200575,
