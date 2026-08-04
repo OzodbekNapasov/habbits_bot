@@ -56,9 +56,8 @@
         }
       ],
       "creationState": {
-        "step": "WAITING_REST_DAYS",
-        "intervalType": "kunlik",
-        "intervalDescription": "Har kuni",
+        "step": "WAITING_TIME",
+        "name": "test",
         "restDays": []
       }
     },
