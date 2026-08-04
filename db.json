@@ -45,12 +45,9 @@
             "Ya"
           ],
           "targetTime": "15:15",
-          "lastCompletedAt": "2026-08-03",
-          "nextDueDate": "2026-08-04",
-          "pendingReminderTimes": [
-            "15:20",
-            "15:30"
-          ],
+          "lastCompletedAt": "2026-08-04",
+          "nextDueDate": "2026-08-05",
+          "pendingReminderTimes": [],
           "completionHistory": [
             "2026-08-03"
           ],
