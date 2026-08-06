@@ -99,8 +99,10 @@
           "lastCompletedAt": "2026-08-06",
           "nextDueDate": "2026-08-07",
           "pendingReminderTimes": [],
-          "completionHistory": [],
-          "streak": 0,
+          "completionHistory": [
+            "2026-08-06"
+          ],
+          "streak": 1,
           "lastNotifiedDueDate": "2026-08-06_17:21"
         }
       ],
