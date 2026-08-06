@@ -1080,6 +1080,20 @@
         <span class="slider"></span>
       </label>
     </div>
+
+    <!-- Telegram ID Connect Section -->
+    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--card-border); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+      <div class="settings-info">
+        <div class="settings-label">🆔 Telegram ID ni ulash</div>
+        <div class="settings-desc">Brauzer yoki kompyuterdan kirganda ma'lumotlaringiz ko'rinishi uchun ID kiriting</div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <input type="number" id="manualUserIdInput" class="form-input" placeholder="Telegram ID (masalan: 8135594558)" style="flex: 1;">
+        <button type="button" onclick="saveManualUserId()" style="background: var(--accent-gradient); border: none; border-radius: 12px; color: #fff; padding: 0 16px; font-weight: 700; cursor: pointer;">
+          Ulash
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Chart.js CDN -->
@@ -1093,7 +1107,23 @@
       tg.ready();
     }
 
-    const userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+    const DEFAULT_USER_ID = 8135594558;
+
+    function resolveUserId() {
+      const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+      if (tgUser) {
+        localStorage.setItem('telegram_user_id', tgUser);
+        return tgUser;
+      }
+      const saved = localStorage.getItem('telegram_user_id');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed)) return parsed;
+      }
+      return DEFAULT_USER_ID;
+    }
+
+    let userId = resolveUserId();
     const userName = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : 'Ozodbek';
     
     // Set Profile Header Values
@@ -1759,6 +1789,34 @@
       } catch (err) {
         console.error(err);
         alert("Server bilan bog'lanishda xatolik yuz berdi.");
+      }
+    }
+
+    // Save or connect Telegram ID manually
+    function saveManualUserId() {
+      const inputVal = document.getElementById('manualUserIdInput').value;
+      if (!inputVal) return alert("Iltimos, Telegram ID kiriting.");
+      const newId = parseInt(inputVal, 10);
+      if (isNaN(newId)) return alert("Noto'g'ri Telegram ID kiritildi.");
+
+      userId = newId;
+      localStorage.setItem('telegram_user_id', newId);
+      toggleSheet('settingsSheet', false);
+      fetchUserHabits();
+      fetchSettings();
+      alert(`Telegram ID muvaffaqiyatli ulandi: ${newId} 🆔`);
+    }
+
+    async function fetchSettings() {
+      if (!userId) return;
+      const inputEl = document.getElementById('manualUserIdInput');
+      if (inputEl) inputEl.value = userId;
+      try {
+        const response = await fetch(`/api/user/settings?userId=${userId}`);
+        const data = await response.json();
+        document.getElementById('notificationToggle').checked = data.notificationsEnabled;
+      } catch (err) {
+        console.error('Fetch settings error:', err);
       }
     }
 
