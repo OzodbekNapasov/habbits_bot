@@ -464,6 +464,33 @@
       fill: none;
     }
 
+    .btn-edit {
+      background: transparent;
+      border: none;
+      color: rgba(99, 102, 241, 0.6);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-edit:active {
+      transform: scale(0.85);
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--accent-color);
+    }
+
+    .btn-edit svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+    }
+
     .badge-completed {
       background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.2);
@@ -936,6 +963,14 @@
       </button>
     </div>
 
+    <!-- Quick Preset Box for Medication -->
+    <div style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="font-size: 0.85rem; font-weight: 700; color: #a78bfa;">💊 3 Mahal Dori Eslatmasi</div>
+      <button type="button" onclick="createMedicationPreset()" style="background: var(--accent-gradient); border: none; border-radius: 10px; color: #fff; padding: 8px 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; box-shadow: var(--glow-shadow);">
+        + Avto Yaratish
+      </button>
+    </div>
+
     <form id="addHabitForm" onsubmit="submitHabit(event)" style="display: flex; flex-direction: column; gap: 16px;">
       <div class="form-group">
         <label class="form-label">Odat nomi</label>
@@ -981,6 +1016,45 @@
       </div>
 
       <button type="submit" class="btn-submit">Yaratish</button>
+    </form>
+  </div>
+
+  <!-- 2. Bottom Sheet: Edit Habit Form -->
+  <div class="bottom-sheet" id="editHabitSheet">
+    <div class="sheet-header">
+      <div class="sheet-title">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        Odatni Tahrirlash
+      </div>
+      <button class="sheet-close" onclick="toggleSheet('editHabitSheet', false)">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <form id="editHabitForm" onsubmit="submitEditHabit(event)" style="display: flex; flex-direction: column; gap: 16px;">
+      <input type="hidden" id="editHabitId">
+
+      <div class="form-group">
+        <label class="form-label">Odat nomi</label>
+        <input type="text" id="editHabitNameInput" class="form-input" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Takrorlanish turi</label>
+        <select id="editHabitIntervalInput" class="form-input" style="background-color: var(--bg-color);">
+          <option value="kunlik">Har kuni</option>
+          <option value="haftalik">Haftada bir marta</option>
+          <option value="oylik">Oyda bir marta</option>
+          <option value="custom">Oraliq kunlar bo'yicha (Custom)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Bajarish vaqti</label>
+        <input type="time" id="editHabitTimeInput" class="form-input" required>
+      </div>
+
+      <button type="submit" class="btn-submit">Saqlash</button>
     </form>
   </div>
 
@@ -1449,8 +1523,11 @@
               </span>
             </div>
           </div>
-          <div class="action-group">
+          <div class="action-group" style="display: flex; align-items: center; gap: 4px;">
             ${actionHtml}
+            <button class="btn-edit" onclick="openEditSheet('${habit.id}')" aria-label="Tahrirlash">
+              <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </button>
             <button class="btn-delete" onclick="triggerDeleteHabit('${habit.id}', '${escapeHtml(habit.name)}')" aria-label="Ochirish">
               <svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </button>
@@ -1499,6 +1576,78 @@
       } catch (err) {
         console.error(err);
         alert("Server bilan bog'lanishda xatolik yuz berdi.");
+      }
+    }
+
+    // Open Edit Habit Bottom Sheet with pre-filled fields
+    function openEditSheet(habitId) {
+      const habit = habitsCache.find(h => h.id === habitId);
+      if (!habit) return alert("Odat topilmadi.");
+      document.getElementById('editHabitId').value = habit.id;
+      document.getElementById('editHabitNameInput').value = habit.name;
+      document.getElementById('editHabitTimeInput').value = habit.targetTime || '08:00';
+      document.getElementById('editHabitIntervalInput').value = habit.intervalType || 'kunlik';
+      toggleSheet('editHabitSheet', true);
+    }
+
+    // Submit Edit Habit API Call
+    async function submitEditHabit(event) {
+      event.preventDefault();
+      if (!userId) return alert("Telegram ID aniqlanmadi.");
+      const habitId = document.getElementById('editHabitId').value;
+      const name = document.getElementById('editHabitNameInput').value.trim();
+      const targetTime = document.getElementById('editHabitTimeInput').value;
+      const intervalType = document.getElementById('editHabitIntervalInput').value;
+
+      try {
+        const response = await fetch('/api/habits/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, habitId, name, targetTime, intervalType })
+        });
+        const resData = await response.json();
+        if (resData.success) {
+          toggleSheet('editHabitSheet', false);
+          await fetchUserHabits();
+        } else {
+          alert("Xatolik yuz berdi: " + (resData.error || "Noma'lum xato"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Odatni tahrirlashda xatolik yuz berdi.");
+      }
+    }
+
+    // Quick Preset: Create 3 Mahal Dori Habits via Web App
+    async function createMedicationPreset() {
+      if (!userId) return alert("Telegram ID aniqlanmadi.");
+      const medName = prompt("Dori nomini kiriting (masalan: Paratsetamol):", "Tabletka") || "Tabletka";
+      const startDate = getUzbekistanDateString();
+      const times = ['08:00', '13:00', '20:00'];
+      const labels = ['Ertalab', 'Tushlik', 'Kechqurun'];
+
+      try {
+        for (let i = 0; i < 3; i++) {
+          await fetch('/api/habits/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              name: `Tabletka - ${medName} (${labels[i]})`,
+              intervalType: 'kunlik',
+              intervalDescription: 'Har kuni',
+              restDays: [],
+              targetTime: times[i],
+              startDate
+            })
+          });
+        }
+        closeAllSheets();
+        await fetchUserHabits();
+        alert("💊 3 mahal dori eslatmalari muvaffaqiyatli yaratildi!");
+      } catch (err) {
+        console.error(err);
+        alert("Dori eslatmalarini yaratishda xatolik yuz berdi.");
       }
     }
 

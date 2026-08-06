@@ -209,6 +209,41 @@ export function startWebServer(): void {
       return;
     }
 
+    // API Endpoint: /api/habits/update
+    if (pathname === '/api/habits/update' && req.method === 'POST') {
+      let bodyStr = '';
+      req.on('data', chunk => {
+        bodyStr += chunk;
+      });
+      req.on('end', async () => {
+        try {
+          const { userId, habitId, name, targetTime, intervalType, intervalDescription, restDays } = JSON.parse(bodyStr);
+          if (!userId || !habitId) {
+            res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ error: 'Missing userId or habitId' }));
+            return;
+          }
+
+          const uId = parseInt(userId, 10);
+          const updates: any = {};
+          if (name) updates.name = name;
+          if (targetTime) updates.targetTime = targetTime;
+          if (intervalType) updates.intervalType = intervalType;
+          if (intervalDescription) updates.intervalDescription = intervalDescription;
+          if (restDays) updates.restDays = restDays;
+
+          await updateHabit(uId, habitId, updates);
+
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true }));
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
     // API Endpoint: /api/user/settings
     if (pathname === '/api/user/settings' && req.method === 'GET') {
       const userIdParam = parsedUrl.searchParams.get('userId');
