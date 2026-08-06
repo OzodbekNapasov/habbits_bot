@@ -250,13 +250,13 @@ bot.command('digest', async (ctx: any) => {
 
 bot.command(['test', 'test_eslatma'], async (ctx: any) => {
   const keyboard = Markup.inlineKeyboard([
-    [Markup.button.callback('🟢 ✅ Bajarildi', 'done_sample')],
+    [Markup.button.callback('✅ Bajarildi', 'done_sample')],
     [
       Markup.button.callback('⏰ 15 daqiqa', 'delay_15_sample'),
       Markup.button.callback('⏰ 30 daqiqa', 'delay_30_sample'),
       Markup.button.callback('⏰ 1 soat', 'delay_60_sample'),
     ],
-    [Markup.button.callback('🔴 ❌ Qoldirish', 'skip_sample')],
+    [Markup.button.callback('❌ Qoldirish', 'skip_sample')],
   ]);
 
   const sampleNormalMsg =

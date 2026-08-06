@@ -154,13 +154,13 @@ export async function runReminderCheck(bot: Telegraf<any>): Promise<void> {
           );
 
           const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('🟢 ✅ Bajarildi', `done_${habit.id}`)],
+            [Markup.button.callback('✅ Bajarildi', `done_${habit.id}`)],
             [
               Markup.button.callback('⏰ 15 daqiqa', `delay_15_${habit.id}`),
               Markup.button.callback('⏰ 30 daqiqa', `delay_30_${habit.id}`),
               Markup.button.callback('⏰ 1 soat', `delay_60_${habit.id}`),
             ],
-            [Markup.button.callback('🔴 ❌ Qoldirish', `skip_${habit.id}`)],
+            [Markup.button.callback('❌ Qoldirish', `skip_${habit.id}`)],
           ]);
 
           try {
@@ -200,8 +200,8 @@ export async function runReminderCheck(bot: Telegraf<any>): Promise<void> {
           pending.includes(nowTimeStr)
         ) {
           const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('🟢 ✅ Bajarildi', `done_${habit.id}`)],
-            [Markup.button.callback('🔴 ❌ Qoldirish', `skip_${habit.id}`)],
+            [Markup.button.callback('✅ Bajarildi', `done_${habit.id}`)],
+            [Markup.button.callback('❌ Qoldirish', `skip_${habit.id}`)],
           ]);
 
           try {
