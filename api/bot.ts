@@ -406,6 +406,28 @@ export default async function handler(req: any, res: any) {
     return res.status(200).send('\uFEFF' + csv); // BOM for Excel UTF-8
   }
 
+  // If request is for static asset (like bg.png), serve static asset from public folder
+  if (req.method === 'GET' && pathname !== '/') {
+    const staticFilePath = path.join(process.cwd(), 'public', pathname.replace(/^\//, ''));
+    if (fs.existsSync(staticFilePath) && fs.statSync(staticFilePath).isFile()) {
+      const ext = path.extname(staticFilePath).toLowerCase();
+      const mimeTypes: Record<string, string> = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.svg': 'image/svg+xml',
+        '.css': 'text/css',
+        '.js': 'text/javascript',
+      };
+      if (mimeTypes[ext]) {
+        const fileContent = fs.readFileSync(staticFilePath);
+        res.setHeader('Content-Type', mimeTypes[ext]);
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        return res.status(200).send(fileContent);
+      }
+    }
+  }
+
   // If request is GET (e.g. Mini App UI page view), serve public/index.html
   if (req.method === 'GET') {
     const indexPath = path.join(process.cwd(), 'public', 'index.html');

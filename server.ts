@@ -406,7 +406,7 @@ export function startWebServer(): void {
       filePath = path.join(PUBLIC_DIR, 'index.html');
     }
 
-    const ext = path.extname(filePath);
+    const ext = path.extname(filePath).toLowerCase();
     const contentType =
       ext === '.css'
         ? 'text/css'
@@ -414,6 +414,10 @@ export function startWebServer(): void {
         ? 'text/javascript'
         : ext === '.json'
         ? 'application/json'
+        : ext === '.png'
+        ? 'image/png'
+        : ext === '.jpg' || ext === '.jpeg'
+        ? 'image/jpeg'
         : 'text/html';
 
     try {
