@@ -44,7 +44,7 @@
           "restDays": [
             "Ya"
           ],
-          "targetTime": "15:15",
+          "targetTime": "15:00",
           "lastCompletedAt": "2026-08-04",
           "nextDueDate": "2026-08-07",
           "pendingReminderTimes": [],
