@@ -103,7 +103,10 @@
           "streak": 0
         }
       ],
-      "creationState": null
+      "creationState": null,
+      "customName": "SAVITAR",
+      "customAvatar": "SV",
+      "customSubtitle": "Admin"
     },
     {
       "id": 5657200575,
