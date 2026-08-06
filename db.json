@@ -98,7 +98,10 @@
           "streak": 0
         }
       ],
-      "creationState": null
+      "creationState": {
+        "step": "EDITING_TIME",
+        "habitId": "e81f1a23-4567-4890-a1b2-c3d4e5f60003"
+      }
     },
     {
       "id": 5657200575,
