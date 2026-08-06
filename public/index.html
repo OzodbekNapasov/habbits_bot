@@ -1688,11 +1688,16 @@
       const targetTime = document.getElementById('editHabitTimeInput').value;
       const intervalType = document.getElementById('editHabitIntervalInput').value;
 
+      let intervalDescription = 'Har kuni';
+      if (intervalType === 'haftalik') intervalDescription = 'Haftada 1 marta';
+      else if (intervalType === 'oylik') intervalDescription = 'Oyda 1 marta';
+      else if (intervalType === 'custom') intervalDescription = 'Oraliq kunlar bo\'yicha';
+
       try {
         const response = await fetch('/api/habits/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, habitId, name, targetTime, intervalType })
+          body: JSON.stringify({ userId, habitId, name, targetTime, intervalType, intervalDescription })
         });
         const resData = await response.json();
         if (resData.success) {

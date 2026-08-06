@@ -215,6 +215,41 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({ success: true });
   }
 
+  // Serve API Endpoint: /api/habits/update
+  if (pathname === '/api/habits/update' && req.method === 'POST') {
+    await ensureInitialized();
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // ignore
+      }
+    }
+    const { userId, habitId, name, targetTime, intervalType, intervalDescription, restDays } = body;
+    if (!userId || !habitId) {
+      return res.status(400).json({ error: 'Missing userId or habitId' });
+    }
+
+    const uId = parseInt(userId, 10);
+    const updates: any = {};
+    if (name) updates.name = name;
+    if (targetTime) updates.targetTime = targetTime;
+    if (intervalType) updates.intervalType = intervalType;
+    if (intervalDescription) updates.intervalDescription = intervalDescription;
+    if (restDays) updates.restDays = restDays;
+
+    const updated = await updateHabit(uId, habitId, updates);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (updated) {
+      return res.status(200).json({ success: true, habit: updated });
+    } else {
+      return res.status(500).json({ error: 'Failed to update habit' });
+    }
+  }
+
   // Serve API Endpoint: /api/user/settings
   if (pathname === '/api/user/settings' && req.method === 'GET') {
     await ensureInitialized();
