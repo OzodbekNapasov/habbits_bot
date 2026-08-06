@@ -26,6 +26,9 @@ export interface Habit {
 export interface User {
   id: number;
   firstName: string;
+  customName?: string;
+  customAvatar?: string;
+  customSubtitle?: string;
   notificationsEnabled?: boolean; // default true
   creationState?: any;
   habits: Habit[];

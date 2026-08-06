@@ -1028,11 +1028,14 @@
 
   <!-- Profile Header Card -->
   <div class="glass-card header-card">
-    <div class="profile-info">
+    <div class="profile-info" style="cursor:pointer;" onclick="openEditProfileSheet()" title="Profilni tahrirlash">
       <div class="avatar" id="userAvatar">O</div>
       <div class="user-meta">
-        <div class="user-name" id="userName">Ozodbek</div>
-        <div class="user-subtitle">Shaxsiy Odatlar Boshqaruvi</div>
+        <div class="user-name" style="display:flex; align-items:center; gap:6px;">
+          <span id="userName">Ozodbek</span>
+          <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none" stroke="currentColor" style="width:13px;height:13px;opacity:0.55;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        </div>
+        <div class="user-subtitle" id="userSubtitle">Shaxsiy Odatlar Boshqaruvi</div>
       </div>
     </div>
     <div class="header-actions">
@@ -1272,6 +1275,15 @@
       </label>
     </div>
 
+    <!-- Edit Profile Section Link -->
+    <div class="settings-row" style="cursor:pointer;" onclick="toggleSheet('settingsSheet', false); openEditProfileSheet();">
+      <div class="settings-info">
+        <div class="settings-label">👤 Profil ma'lumotlari</div>
+        <div class="settings-desc">Ism, avatar (emoji) va statusni tahrirlash</div>
+      </div>
+      <span style="color:var(--accent-color); font-weight:700; font-size:0.85rem;">Tahrirlash ✏️</span>
+    </div>
+
     <!-- Telegram ID Connect Section -->
     <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--card-border); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
       <div class="settings-info">
@@ -1285,6 +1297,38 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- 3. Bottom Sheet: Edit Profile Sheet -->
+  <div class="bottom-sheet" id="editProfileSheet">
+    <div class="sheet-header">
+      <div class="sheet-title">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        Profilni Tahrirlash
+      </div>
+      <button class="sheet-close" onclick="toggleSheet('editProfileSheet', false)">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <form id="editProfileForm" onsubmit="submitEditProfile(event)" style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="form-group">
+        <label class="form-label">Ism va familiya</label>
+        <input type="text" id="profileNameInput" class="form-input" placeholder="Ozodbek Napasov" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Avatar (Emoji yoki harf)</label>
+        <input type="text" id="profileAvatarInput" class="form-input" placeholder="👑" maxlength="6" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Status / Kasb</label>
+        <input type="text" id="profileSubtitleInput" class="form-input" placeholder="Shaxsiy Odatlar Boshqaruvi" required>
+      </div>
+
+      <button type="submit" class="btn-submit">💾 Saqlash</button>
+    </form>
   </div>
 
   <!-- Chart.js CDN -->
@@ -1315,13 +1359,112 @@
     }
 
     let userId = resolveUserId();
-    const userName = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : 'Ozodbek';
-    
-    // Set Profile Header Values
-    document.getElementById('userName').textContent = userName;
-    if (userName && userName.length > 0) {
-      document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
+
+    // Load and Apply Custom Profile Info with Permanent Storage
+    async function initUserProfile() {
+      let savedName = localStorage.getItem('custom_user_name');
+      let savedAvatar = localStorage.getItem('custom_user_avatar');
+      let savedSubtitle = localStorage.getItem('custom_user_subtitle');
+
+      if (!savedName) {
+        savedName = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : 'Ozodbek';
+      }
+      if (!savedAvatar) {
+        savedAvatar = savedName ? savedName.charAt(0).toUpperCase() : 'O';
+      }
+      if (!savedSubtitle) {
+        savedSubtitle = 'Shaxsiy Odatlar Boshqaruvi';
+      }
+
+      applyProfileUI(savedName, savedAvatar, savedSubtitle);
+
+      if (userId) {
+        try {
+          const res = await fetch(`/api/user/profile?userId=${userId}`);
+          const data = await res.json();
+          if (data.customName) savedName = data.customName;
+          if (data.customAvatar) savedAvatar = data.customAvatar;
+          if (data.customSubtitle) savedSubtitle = data.customSubtitle;
+
+          localStorage.setItem('custom_user_name', savedName);
+          localStorage.setItem('custom_user_avatar', savedAvatar);
+          localStorage.setItem('custom_user_subtitle', savedSubtitle);
+
+          applyProfileUI(savedName, savedAvatar, savedSubtitle);
+        } catch (err) {
+          console.error('Fetch profile error:', err);
+        }
+      }
     }
+
+    function applyProfileUI(name, avatar, subtitle) {
+      const nameEl = document.getElementById('userName');
+      const avatarEl = document.getElementById('userAvatar');
+      const subtitleEl = document.getElementById('userSubtitle');
+
+      if (nameEl) nameEl.textContent = name;
+      if (avatarEl) avatarEl.textContent = avatar;
+      if (subtitleEl) subtitleEl.textContent = subtitle;
+
+      const profileNameInput = document.getElementById('profileNameInput');
+      const profileAvatarInput = document.getElementById('profileAvatarInput');
+      const profileSubtitleInput = document.getElementById('profileSubtitleInput');
+
+      if (profileNameInput) profileNameInput.value = name;
+      if (profileAvatarInput) profileAvatarInput.value = avatar;
+      if (profileSubtitleInput) profileSubtitleInput.value = subtitle;
+    }
+
+    function openEditProfileSheet() {
+      const name = document.getElementById('userName').textContent;
+      const avatar = document.getElementById('userAvatar').textContent;
+      const subtitle = document.getElementById('userSubtitle').textContent;
+
+      const profileNameInput = document.getElementById('profileNameInput');
+      const profileAvatarInput = document.getElementById('profileAvatarInput');
+      const profileSubtitleInput = document.getElementById('profileSubtitleInput');
+
+      if (profileNameInput) profileNameInput.value = name;
+      if (profileAvatarInput) profileAvatarInput.value = avatar;
+      if (profileSubtitleInput) profileSubtitleInput.value = subtitle;
+
+      toggleSheet('editProfileSheet', true);
+    }
+
+    async function submitEditProfile(e) {
+      if (e) e.preventDefault();
+      const newName = document.getElementById('profileNameInput').value.trim();
+      const newAvatar = document.getElementById('profileAvatarInput').value.trim();
+      const newSubtitle = document.getElementById('profileSubtitleInput').value.trim();
+
+      if (!newName || !newAvatar) return alert("Iltimos, ism va avatarni kiriting.");
+
+      localStorage.setItem('custom_user_name', newName);
+      localStorage.setItem('custom_user_avatar', newAvatar);
+      localStorage.setItem('custom_user_subtitle', newSubtitle);
+
+      applyProfileUI(newName, newAvatar, newSubtitle);
+      toggleSheet('editProfileSheet', false);
+
+      if (userId) {
+        try {
+          await fetch('/api/user/profile/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              customName: newName,
+              customAvatar: newAvatar,
+              customSubtitle: newSubtitle,
+            })
+          });
+        } catch (err) {
+          console.error('Update profile error:', err);
+        }
+      }
+    }
+
+    initUserProfile();
 
     // Current Active Filter State
     let currentFilter = 'today';

@@ -375,4 +375,24 @@ export async function addCompletionRecord(
   return habit;
 }
 
+export async function updateUserProfile(
+  userId: number,
+  profile: { customName?: string; customAvatar?: string; customSubtitle?: string }
+): Promise<User | null> {
+  const db = readDb();
+  let user = db.users.find((u) => u.id === userId);
+  if (!user) {
+    user = { id: userId, firstName: profile.customName || 'User', habits: [] };
+    db.users.push(user);
+  }
+
+  if (profile.customName !== undefined) user.customName = profile.customName;
+  if (profile.customAvatar !== undefined) user.customAvatar = profile.customAvatar;
+  if (profile.customSubtitle !== undefined) user.customSubtitle = profile.customSubtitle;
+
+  writeDb(db);
+  await saveDbToGitHub(JSON.stringify(db, null, 2));
+  return user;
+}
+
 

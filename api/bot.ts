@@ -1,5 +1,5 @@
 import { bot } from '../index';
-import { loadFromGitHub, getHabits, getUsers, updateHabit, findHabitById, addHabit, deleteHabit, toggleUserNotifications, getUser, addCompletionRecord } from '../database';
+import { loadFromGitHub, getHabits, getUsers, updateHabit, findHabitById, addHabit, deleteHabit, toggleUserNotifications, getUser, addCompletionRecord, updateUserProfile } from '../database';
 import { getUzbekistanDate, getTodayDateString, calculateNextDueDateAfterCompletion, calculateNextDueDateFromStartDate, addMinutesToTime } from '../utils';
 import fs from 'fs';
 import path from 'path';
@@ -329,6 +329,48 @@ export default async function handler(req: any, res: any) {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({ success: true, notificationsEnabled: user?.notificationsEnabled !== false });
+  }
+
+  // Serve API Endpoint: /api/user/profile (GET)
+  if (pathname === '/api/user/profile' && req.method === 'GET') {
+    await ensureInitialized();
+    const userIdParam = parsedUrl.searchParams.get('userId');
+    if (!userIdParam) return res.status(400).json({ error: 'Missing userId' });
+
+    const uId = parseInt(userIdParam, 10);
+    const user = getUser(uId);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).json({
+      customName: user?.customName || null,
+      customAvatar: user?.customAvatar || null,
+      customSubtitle: user?.customSubtitle || null,
+    });
+  }
+
+  // Serve API Endpoint: /api/user/profile/update (POST)
+  if (pathname === '/api/user/profile/update' && req.method === 'POST') {
+    await ensureInitialized();
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        body = {};
+      }
+    }
+    const { userId, customName, customAvatar, customSubtitle } = body;
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId' });
+    }
+
+    const uId = parseInt(userId, 10);
+    const updatedUser = await updateUserProfile(uId, { customName, customAvatar, customSubtitle });
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).json({ success: true, user: updatedUser });
   }
 
   // Serve API Endpoint: /api/habits/stats
