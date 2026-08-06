@@ -326,21 +326,21 @@
 
     /* Horizontal Filter Navigation */
     .filter-tabs {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
       gap: 6px;
       padding: 2px 0;
       width: 100%;
     }
 
     .tab-btn {
-      flex: 1 1 auto;
-      min-width: 0;
+      width: 100%;
       justify-content: center;
+      text-align: center;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.04);
       color: var(--text-muted);
-      padding: 8px 10px;
+      padding: 9px 4px;
       border-radius: 12px;
       font-size: 0.8rem;
       font-weight: 600;
@@ -352,11 +352,13 @@
       gap: 4px;
     }
 
-    @media (max-width: 520px) {
+    @media (max-width: 540px) {
+      .filter-tabs {
+        grid-template-columns: repeat(3, 1fr);
+      }
       .tab-btn {
-        padding: 7px 8px;
-        font-size: 0.75rem;
-        gap: 3px;
+        padding: 8px 4px;
+        font-size: 0.78rem;
       }
       .tab-svg {
         width: 12px;
@@ -484,6 +486,7 @@
     .habit-card-footer {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       margin-top: 2px;
       width: 100%;
@@ -493,6 +496,8 @@
       flex: 1;
       padding: 10px;
       text-align: center;
+      justify-content: center;
+      align-items: center;
       font-size: 0.82rem;
       border-radius: 10px;
     }
@@ -514,6 +519,7 @@
       transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
     }
 
@@ -597,13 +603,16 @@
       background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.2);
       color: var(--success-color);
-      padding: 6px 12px;
+      padding: 8px 12px;
       border-radius: 10px;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
       display: flex;
       align-items: center;
+      justify-content: center;
+      text-align: center;
       gap: 6px;
+      width: 100%;
       box-shadow: 0 4px 10px rgba(16, 185, 129, 0.1);
     }
 
@@ -616,13 +625,16 @@
       background: rgba(245, 158, 11, 0.12);
       border: 1px solid rgba(245, 158, 11, 0.25);
       color: #f59e0b;
-      padding: 6px 12px;
+      padding: 8px 12px;
       border-radius: 10px;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
       display: flex;
       align-items: center;
+      justify-content: center;
+      text-align: center;
       gap: 6px;
+      width: 100%;
       box-shadow: 0 4px 10px rgba(245, 158, 11, 0.1);
     }
 
@@ -635,26 +647,32 @@
       background: rgba(99, 102, 241, 0.08);
       border: 1px solid rgba(99, 102, 241, 0.18);
       color: #8b5cf6;
-      padding: 6px 12px;
+      padding: 8px 12px;
       border-radius: 10px;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
       display: flex;
       align-items: center;
+      justify-content: center;
+      text-align: center;
       gap: 4px;
+      width: 100%;
     }
 
     .status-missed {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.05);
       color: var(--text-muted);
-      padding: 6px 12px;
+      padding: 8px 12px;
       border-radius: 10px;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
       display: flex;
       align-items: center;
+      justify-content: center;
+      text-align: center;
       gap: 4px;
+      width: 100%;
     }
 
     .empty-state {
