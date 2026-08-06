@@ -138,6 +138,17 @@ function buildSettingsMessageAndKeyboard(userId: number, firstName: string) {
 }
 
 /**
+ * Helper to build single-column habit buttons (one habit per row)
+ */
+function buildHabitButtonsRows(habits: any[]) {
+  return habits.map((h) => {
+    const isMed = h.isMedication || h.name.toLowerCase().includes('dori') || h.name.toLowerCase().includes('tabletka');
+    const icon = isMed ? '💊' : '📌';
+    return [Markup.button.callback(`${icon} ${h.name}`, `view_${h.id}`)];
+  });
+}
+
+/**
  * Render day-by-day weekly schedule breakdown with week date range navigation
  */
 async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean = false) {
@@ -173,23 +184,14 @@ async function renderWeekSchedule(ctx: any, offset: number = 0, isEdit: boolean 
 
   message += `<i>Haftalarni almashtirish yoki odatni tanlash:</i>`;
 
-  const buttons: any[] = [];
-  const habitsRow: any[] = [];
-
-  userHabits.slice(0, 4).forEach((h) => {
-    habitsRow.push(Markup.button.callback(h.name, `view_${h.id}`));
-  });
-
-  if (habitsRow.length > 0) {
-    buttons.push(habitsRow);
-  }
-
-  buttons.push([
-    Markup.button.callback('◀️ Oldingi hafta', `week_nav_${offset - 1}`),
-    Markup.button.callback('▶️ Keyingi hafta', `week_nav_${offset + 1}`),
-  ]);
-
-  buttons.push([Markup.button.callback('🔙 Orqaga', 'list_habits')]);
+  const buttons: any[] = [
+    ...buildHabitButtonsRows(userHabits),
+    [
+      Markup.button.callback('◀️ Oldingi hafta', `week_nav_${offset - 1}`),
+      Markup.button.callback('▶️ Keyingi hafta', `week_nav_${offset + 1}`),
+    ],
+    [Markup.button.callback('🔙 Orqaga', 'list_habits')],
+  ];
 
   const keyboard = Markup.inlineKeyboard(buttons);
 
@@ -330,14 +332,10 @@ bot.action('filter_today', async (ctx: any) => {
     });
   }
 
-  const habitsRow: any[] = [];
-  todayHabits.slice(0, 4).forEach((h) => {
-    habitsRow.push(Markup.button.callback(h.name, `view_${h.id}`));
-  });
-
-  const buttons: any[] = [];
-  if (habitsRow.length > 0) buttons.push(habitsRow);
-  buttons.push([Markup.button.callback('🔙 Orqaga', 'list_habits')]);
+  const buttons: any[] = [
+    ...buildHabitButtonsRows(todayHabits),
+    [Markup.button.callback('🔙 Orqaga', 'list_habits')],
+  ];
 
   await ctx.editMessageText(message, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
   await ctx.answerCbQuery();
@@ -381,14 +379,10 @@ bot.action('filter_month', async (ctx: any) => {
     });
   }
 
-  const habitsRow: any[] = [];
-  monthHabits.slice(0, 4).forEach((h) => {
-    habitsRow.push(Markup.button.callback(h.name, `view_${h.id}`));
-  });
-
-  const buttons: any[] = [];
-  if (habitsRow.length > 0) buttons.push(habitsRow);
-  buttons.push([Markup.button.callback('🔙 Orqaga', 'list_habits')]);
+  const buttons: any[] = [
+    ...buildHabitButtonsRows(monthHabits),
+    [Markup.button.callback('🔙 Orqaga', 'list_habits')],
+  ];
 
   await ctx.editMessageText(message, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
   await ctx.answerCbQuery();
@@ -415,14 +409,10 @@ bot.action('filter_all', async (ctx: any) => {
     message += `</blockquote>\n\n`;
   });
 
-  const habitsRow: any[] = [];
-  habits.slice(0, 4).forEach((h) => {
-    habitsRow.push(Markup.button.callback(h.name, `view_${h.id}`));
-  });
-
-  const buttons: any[] = [];
-  if (habitsRow.length > 0) buttons.push(habitsRow);
-  buttons.push([Markup.button.callback('🔙 Orqaga', 'list_habits')]);
+  const buttons: any[] = [
+    ...buildHabitButtonsRows(habits),
+    [Markup.button.callback('🔙 Orqaga', 'list_habits')],
+  ];
 
   await ctx.editMessageText(message, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
   await ctx.answerCbQuery();
