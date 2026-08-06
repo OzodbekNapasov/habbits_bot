@@ -400,8 +400,8 @@
     .habit-card {
       padding: 16px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 12px;
       transition: transform 0.2s ease, background 0.2s ease;
     }
 
@@ -409,11 +409,11 @@
       transform: scale(0.99);
     }
 
-    .habit-info {
+    .habit-card-header {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-width: 55%;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
     }
 
     .habit-name {
@@ -421,7 +421,15 @@
       font-weight: 700;
       color: #fff;
       line-height: 1.35;
-      word-wrap: break-word;
+      word-break: break-word;
+      flex: 1;
+    }
+
+    .habit-card-actions-icon {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
     }
 
     .habit-tags {
@@ -446,8 +454,36 @@
     .tag svg {
       width: 12px;
       height: 12px;
-      stroke: var(--text-muted);
+      stroke: currentColor;
       fill: none;
+    }
+
+    .tag-due {
+      background: rgba(139, 92, 246, 0.12) !important;
+      border: 1px solid rgba(139, 92, 246, 0.25) !important;
+      color: #c4b5fd !important;
+    }
+
+    .tag-remaining {
+      background: rgba(245, 158, 11, 0.12) !important;
+      border: 1px solid rgba(245, 158, 11, 0.25) !important;
+      color: #fbbf24 !important;
+    }
+
+    .habit-card-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+      width: 100%;
+    }
+
+    .habit-card-footer .btn {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.82rem;
+      border-radius: 10px;
     }
 
     /* Interactive Action Buttons */
@@ -1505,6 +1541,34 @@
 
     let monthSelectedDate = getUzbekistanDateString();
 
+    function getDaysRemainingText(nextDueDateStr) {
+      if (!nextDueDateStr) return 'Rejalanmagan';
+      const todayStr = getUzbekistanDateString();
+      if (nextDueDateStr === todayStr) return '⏳ Bugun';
+
+      const todayDate = new Date(`${todayStr}T00:00:00`);
+      const dueParts = nextDueDateStr.split('-');
+      if (dueParts.length < 3) return 'Rejalanmagan';
+      const dueDate = new Date(parseInt(dueParts[0], 10), parseInt(dueParts[1], 10) - 1, parseInt(dueParts[2], 10));
+
+      const diffTime = dueDate.getTime() - todayDate.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) return '⏳ Ertaga';
+      if (diffDays < 0) return `⏳ ${Math.abs(diffDays)} kun o'tgan`;
+      return `⏳ ${diffDays} kun qoldi`;
+    }
+
+    function formatNextDueDateLabel(nextDueDateStr) {
+      if (!nextDueDateStr) return 'Rejalanmagan';
+      const todayStr = getUzbekistanDateString();
+      const parts = nextDueDateStr.split('-');
+      if (parts.length < 3) return nextDueDateStr;
+      const shortDate = `${parts[2]}.${parts[1]}`;
+      if (nextDueDateStr === todayStr) return `📅 Bugun (${shortDate})`;
+      return `📅 ${shortDate}`;
+    }
+
     function createHabitCardElement(habit, targetSelectedDate) {
       const todayStr = getUzbekistanDateString();
       const isCompletedOnDate = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(targetSelectedDate);
@@ -1514,13 +1578,13 @@
       let actionHtml = '';
       if (isCompletedOnDate) {
         actionHtml = `
-          <span class="badge-completed">
+          <span class="badge-completed" style="width: 100%; justify-content: center;">
             <svg viewBox="0 0 24 24" stroke-width="3" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
             Bajarildi
           </span>`;
       } else if (isSkippedOnDate) {
         actionHtml = `
-          <span class="badge-skipped">
+          <span class="badge-skipped" style="width: 100%; justify-content: center;">
             <svg viewBox="0 0 24 24" stroke-width="2.5" style="width:12px;height:12px;"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
             Qoldirildi
           </span>`;
@@ -1530,36 +1594,46 @@
           <button class="btn btn-skip" onclick="skipHabit('${habit.id}')">Qoldirish</button>`;
       } else {
         if (targetSelectedDate < todayStr) {
-          actionHtml = `<span class="status-missed">Bajarilmagan</span>`;
+          actionHtml = `<span class="status-missed" style="width: 100%; justify-content: center;">Bajarilmagan</span>`;
         } else {
-          actionHtml = `<span class="status-scheduled">Rejalashtirilgan</span>`;
+          actionHtml = `<span class="status-scheduled" style="width: 100%; justify-content: center;">Rejalashtirilgan</span>`;
         }
       }
 
       const card = document.createElement('div');
       card.className = 'glass-card habit-card';
       card.innerHTML = `
-        <div class="habit-info">
+        <div class="habit-card-header">
           <div class="habit-name">${escapeHtml(habit.name)}</div>
-          <div class="habit-tags">
-            <span class="tag">
-              <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 1v22M7 1v22M3 5h18M3 10h18M3 15h18M3 20h18"></path></svg>
-              ${escapeHtml(habit.intervalDescription || habit.intervalType)}
-            </span>
-            <span class="tag">
-              <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              ${habit.targetTime}
-            </span>
+          <div class="habit-card-actions-icon">
+            <button class="btn-edit" onclick="openEditSheet('${habit.id}')" aria-label="Tahrirlash">
+              <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </button>
+            <button class="btn-delete" onclick="triggerDeleteHabit('${habit.id}', '${escapeHtml(habit.name)}')" aria-label="Ochirish">
+              <svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            </button>
           </div>
         </div>
-        <div class="action-group" style="display: flex; align-items: center; gap: 4px;">
+
+        <div class="habit-tags">
+          <span class="tag">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 1v22M7 1v22M3 5h18M3 10h18M3 15h18M3 20h18"></path></svg>
+            ${escapeHtml(habit.intervalDescription || habit.intervalType)}
+          </span>
+          <span class="tag">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            ${habit.targetTime}
+          </span>
+          <span class="tag tag-due">
+            ${formatNextDueDateLabel(habit.nextDueDate)}
+          </span>
+          <span class="tag tag-remaining">
+            ${getDaysRemainingText(habit.nextDueDate)}
+          </span>
+        </div>
+
+        <div class="habit-card-footer">
           ${actionHtml}
-          <button class="btn-edit" onclick="openEditSheet('${habit.id}')" aria-label="Tahrirlash">
-            <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          </button>
-          <button class="btn-delete" onclick="triggerDeleteHabit('${habit.id}', '${escapeHtml(habit.name)}')" aria-label="Ochirish">
-            <svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-          </button>
         </div>
       `;
       return card;
