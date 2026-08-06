@@ -38,9 +38,7 @@
     }
 
     body {
-      background: radial-gradient(ellipse at top left, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
-                  radial-gradient(ellipse at bottom right, rgba(6, 182, 212, 0.15) 0%, transparent 60%),
-                  #060e17;
+      background-color: #04080e;
       color: var(--text-main);
       min-height: 100vh;
       padding: 16px;
@@ -54,13 +52,42 @@
       margin: 0 auto;
     }
 
+    /* Fixed Fullscreen Background Image */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: url('/bg.png') no-repeat center center;
+      background-size: cover;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    /* Soft Darkening & Vignette Overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, rgba(6, 14, 23, 0.45) 0%, rgba(4, 8, 14, 0.8) 100%);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
     /* Ambient glowing background blobs */
     .bg-glow-1 {
       position: absolute;
       width: 280px;
       height: 280px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(0, 0, 0, 0) 70%);
       top: -60px;
       right: -60px;
       z-index: -1;
@@ -72,7 +99,7 @@
       width: 320px;
       height: 320px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.18) 0%, rgba(0, 0, 0, 0) 70%);
       bottom: 50px;
       left: -100px;
       z-index: -1;
