@@ -106,7 +106,8 @@
       "creationState": null,
       "customName": "SAVITAR",
       "customAvatar": "SV",
-      "customSubtitle": "Admin"
+      "customSubtitle": "Admin",
+      "notificationsEnabled": false
     },
     {
       "id": 5657200575,
