@@ -98,9 +98,14 @@
           "targetTime": "16:20",
           "lastCompletedAt": null,
           "nextDueDate": "2026-08-06",
-          "pendingReminderTimes": [],
+          "pendingReminderTimes": [
+            "16:30",
+            "16:40",
+            "16:50"
+          ],
           "completionHistory": [],
-          "streak": 0
+          "streak": 0,
+          "lastNotifiedDueDate": "2026-08-06_16:20"
         }
       ],
       "creationState": null,
