@@ -130,6 +130,7 @@ export default async function handler(req: any, res: any) {
 
     const { habit } = habitInfo;
     const now = getUzbekistanDate();
+    const todayStr = getTodayDateString(now);
     const nextDueDate = calculateNextDueDateAfterCompletion(
       habit.intervalType,
       habit.targetTime,
@@ -138,7 +139,11 @@ export default async function handler(req: any, res: any) {
       habit.customIntervalDays
     );
 
-    await updateHabit(uId, habitId, { nextDueDate });
+    await updateHabit(uId, habitId, {
+      nextDueDate,
+      lastSkippedAt: todayStr,
+      pendingReminderTimes: [],
+    });
 
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');

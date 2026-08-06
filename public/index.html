@@ -551,6 +551,25 @@
       fill: none;
     }
 
+    .badge-skipped {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      color: #f59e0b;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 10px rgba(245, 158, 11, 0.1);
+    }
+
+    .badge-skipped svg {
+      stroke: #f59e0b;
+      fill: none;
+    }
+
     .status-scheduled {
       background: rgba(99, 102, 241, 0.08);
       border: 1px solid rgba(99, 102, 241, 0.18);
@@ -1490,7 +1509,8 @@
 
         filtered = habitsCache.filter(habit => {
           const isCompletedOnDate = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(targetSelectedDate);
-          return isHabitScheduledOnDate(habit, targetSelectedDate) || isCompletedOnDate;
+          const isSkippedOnDate = habit.lastSkippedAt && habit.lastSkippedAt.startsWith(targetSelectedDate);
+          return isHabitScheduledOnDate(habit, targetSelectedDate) || isCompletedOnDate || isSkippedOnDate;
         });
 
         // Sort by time
@@ -1499,7 +1519,8 @@
       } else if (currentFilter === 'today') {
         filtered = habitsCache.filter(habit => {
           const isCompletedToday = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(todayStr);
-          return habit.nextDueDate === todayStr || isCompletedToday;
+          const isSkippedToday = habit.lastSkippedAt && habit.lastSkippedAt.startsWith(todayStr);
+          return habit.nextDueDate === todayStr || isCompletedToday || isSkippedToday;
         });
         // Sort by time
         filtered.sort((a, b) => a.targetTime.localeCompare(b.targetTime));
@@ -1565,6 +1586,7 @@
       container.innerHTML = '';
       filtered.forEach(habit => {
         const isCompletedOnDate = habit.lastCompletedAt && habit.lastCompletedAt.startsWith(targetSelectedDate);
+        const isSkippedOnDate = habit.lastSkippedAt && habit.lastSkippedAt.startsWith(targetSelectedDate);
 
         // Check if actions should be allowed (only allowed if selected date is today)
         const isToday = targetSelectedDate === todayStr;
@@ -1575,6 +1597,12 @@
             <span class="badge-completed">
               <svg viewBox="0 0 24 24" stroke-width="3" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
               Bajarildi
+            </span>`;
+        } else if (isSkippedOnDate) {
+          actionHtml = `
+            <span class="badge-skipped">
+              <svg viewBox="0 0 24 24" stroke-width="2.5" style="width:12px;height:12px;"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+              Qoldirildi
             </span>`;
         } else if (isToday) {
           actionHtml = `

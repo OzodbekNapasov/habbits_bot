@@ -115,6 +115,7 @@ export function startWebServer(): void {
 
           const { habit } = habitInfo;
           const now = getUzbekistanDate();
+          const todayStr = getTodayDateString(now);
           const nextDueDate = calculateNextDueDateAfterCompletion(
             habit.intervalType,
             habit.targetTime,
@@ -123,7 +124,11 @@ export function startWebServer(): void {
             habit.customIntervalDays
           );
 
-          await updateHabit(uId, habitId, { nextDueDate });
+          await updateHabit(uId, habitId, {
+            nextDueDate,
+            lastSkippedAt: todayStr,
+            pendingReminderTimes: [],
+          });
 
           res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify({ success: true, nextDueDate }));

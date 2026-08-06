@@ -10,6 +10,7 @@ export interface Habit {
   restDays?: string[];
   targetTime: string; // e.g., '16:00'
   lastCompletedAt?: string | null;
+  lastSkippedAt?: string | null;
   nextDueDate: string; // YYYY-MM-DD
   lastNotifiedDueDate?: string;
   /** Number of consecutive scheduled days completed without a miss */
