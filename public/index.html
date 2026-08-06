@@ -264,8 +264,49 @@
       text-transform: uppercase;
     }
 
+    .day-date {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #a78bfa;
+      margin-top: 1px;
+    }
+
     .day-cell.active .day-name {
       color: #fff;
+    }
+
+    .day-cell.is-today {
+      background: rgba(99, 102, 241, 0.18) !important;
+      border: 1.5px solid #6366f1 !important;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.35);
+      position: relative;
+    }
+
+    .day-cell.is-today .day-name {
+      color: #a78bfa;
+    }
+
+    .day-cell.is-today .day-date {
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .day-cell.is-today::before {
+      content: 'Bugun';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent-gradient);
+      color: #fff;
+      font-size: 0.52rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+      white-space: nowrap;
     }
 
     .day-dot {
@@ -1185,14 +1226,32 @@
     }
 
     const weekDates = getWeekDates();
-
-    // Set Active State to Current Day in Calendar Header
+    const todayStr = getUzbekistanDateString();
     const currentDayUz = new Date().getDay(); // 0 is Sunday, 1 is Monday...
     const uzDayIndex = currentDayUz === 0 ? 6 : currentDayUz - 1; // Map to 0-6 (Du-Ya)
-    const activeCell = document.getElementById(`day-${uzDayIndex}`);
-    if (activeCell) {
-      activeCell.classList.add('active');
+
+    function initCalendarGrid() {
+      const container = document.querySelector('.calendar-grid');
+      if (!container) return;
+      
+      const weekDayNames = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
+      container.innerHTML = weekDates.map((dateStr, i) => {
+        const parts = dateStr.split('-');
+        const formattedDate = `${parts[2]}.${parts[1]}`; // DD.MM
+        const isToday = dateStr === todayStr;
+        const isActive = i === uzDayIndex;
+        
+        return `
+          <div class="day-cell ${isToday ? 'is-today' : ''} ${isActive ? 'active' : ''}" id="day-${i}" onclick="selectWeekday(${i})">
+            <span class="day-name">${weekDayNames[i]}</span>
+            <span class="day-date">${formattedDate}</span>
+            <div class="day-dot"></div>
+          </div>
+        `;
+      }).join('');
     }
+
+    initCalendarGrid();
 
     // Bind Event Handlers to Filter Tabs
     const tabButtons = document.querySelectorAll('#filterTabs .tab-btn');
