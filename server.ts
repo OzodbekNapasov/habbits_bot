@@ -140,6 +140,47 @@ export function startWebServer(): void {
       return;
     }
 
+    // API Endpoint: /api/habits/unskip
+    if (pathname === '/api/habits/unskip' && req.method === 'POST') {
+      let bodyStr = '';
+      req.on('data', chunk => {
+        bodyStr += chunk;
+      });
+      req.on('end', async () => {
+        try {
+          const { userId, habitId } = JSON.parse(bodyStr);
+          if (!userId || !habitId) {
+            res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ error: 'Missing userId or habitId' }));
+            return;
+          }
+
+          const uId = parseInt(userId, 10);
+          const habitInfo = findHabitById(habitId);
+          if (!habitInfo) {
+            res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ error: 'Habit not found' }));
+            return;
+          }
+
+          const now = getUzbekistanDate();
+          const todayStr = getTodayDateString(now);
+
+          await updateHabit(uId, habitId, {
+            nextDueDate: todayStr,
+            lastSkippedAt: null,
+          });
+
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, nextDueDate: todayStr }));
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
     // API Endpoint: /api/habits/add
     if (pathname === '/api/habits/add' && req.method === 'POST') {
       let bodyStr = '';

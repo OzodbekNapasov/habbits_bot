@@ -150,6 +150,41 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({ success: true, nextDueDate });
   }
 
+  // Serve API Endpoint: /api/habits/unskip
+  if (pathname === '/api/habits/unskip' && req.method === 'POST') {
+    await ensureInitialized();
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        body = {};
+      }
+    }
+    const { userId, habitId } = body;
+    if (!userId || !habitId) {
+      return res.status(400).json({ error: 'Missing userId or habitId' });
+    }
+
+    const uId = parseInt(userId, 10);
+    const habitInfo = findHabitById(habitId);
+    if (!habitInfo) {
+      return res.status(404).json({ error: 'Habit not found' });
+    }
+
+    const now = getUzbekistanDate();
+    const todayStr = getTodayDateString(now);
+
+    await updateHabit(uId, habitId, {
+      nextDueDate: todayStr,
+      lastSkippedAt: null,
+    });
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).json({ success: true, nextDueDate: todayStr });
+  }
+
   // Serve API Endpoint: /api/habits/add
   if (pathname === '/api/habits/add' && req.method === 'POST') {
     await ensureInitialized();

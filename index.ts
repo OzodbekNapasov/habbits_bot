@@ -572,13 +572,46 @@ bot.action(/^skip_(.+)$/, async (ctx: any) => {
     habit.customIntervalDays
   );
 
+  const todayStr = getTodayDateString(now);
   await updateHabit(userId, habitId, {
     nextDueDate,
+    lastSkippedAt: todayStr,
     pendingReminderTimes: [], // Clear re-notifications on skip
   });
 
-  await ctx.editMessageText('❌ Bu safargi harakat qoldirildi.');
-  await ctx.answerCbQuery("Harakat qoldirildi. ❌");
+  await ctx.editMessageText(`⏭️ "<b>${habit.name}</b>" odati qoldirildi.`, {
+    parse_mode: 'HTML',
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "↩️ Qaytarish (Bekor qilish)", callback_data: `unskip_${habitId}` },
+          { text: "✅ Bajarildi", callback_data: `done_${habitId}` }
+        ]
+      ]
+    }
+  });
+  await ctx.answerCbQuery("Harakat qoldirildi. ⏭️");
+});
+
+bot.action(/^unskip_(.+)$/, async (ctx: any) => {
+  const habitId = ctx.match[1];
+  const userId = ctx.from.id;
+  const habitInfo = findHabitById(habitId);
+  if (!habitInfo) {
+    await ctx.answerCbQuery("Odat topilmadi.");
+    return;
+  }
+
+  const now = getUzbekistanDate();
+  const todayStr = getTodayDateString(now);
+
+  await updateHabit(userId, habitId, {
+    nextDueDate: todayStr,
+    lastSkippedAt: null,
+  });
+
+  await ctx.editMessageText(`🔄 "<b>${habitInfo.habit.name}</b>" odati qaytarildi va bugun uchun faollashtirildi!`, { parse_mode: 'HTML' });
+  await ctx.answerCbQuery("Odat qaytarildi! 🔄");
 });
 
 bot.action('done_sample', async (ctx: any) => {

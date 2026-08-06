@@ -327,30 +327,41 @@
     /* Horizontal Filter Navigation */
     .filter-tabs {
       display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 2px 4px;
-      scrollbar-width: none; /* Firefox */
-    }
-
-    .filter-tabs::-webkit-scrollbar {
-      display: none; /* Safari & Chrome */
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 2px 0;
+      width: 100%;
     }
 
     .tab-btn {
+      flex: 1 1 auto;
+      min-width: 0;
+      justify-content: center;
       background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.04);
       color: var(--text-muted);
-      padding: 10px 18px;
+      padding: 8px 10px;
       border-radius: 12px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 600;
       white-space: nowrap;
       cursor: pointer;
       transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
+    }
+
+    @media (max-width: 520px) {
+      .tab-btn {
+        padding: 7px 8px;
+        font-size: 0.75rem;
+        gap: 3px;
+      }
+      .tab-svg {
+        width: 12px;
+        height: 12px;
+      }
     }
 
     .tab-btn.active {
@@ -1584,10 +1595,11 @@
           </span>`;
       } else if (isSkippedOnDate) {
         actionHtml = `
-          <span class="badge-skipped" style="width: 100%; justify-content: center;">
-            <svg viewBox="0 0 24 24" stroke-width="2.5" style="width:12px;height:12px;"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
-            Qoldirildi
-          </span>`;
+          <div style="display:flex; align-items:center; gap:6px; width:100%;">
+            <span class="badge-skipped" style="flex:1; justify-content:center; margin:0; padding:8px 6px; font-size:0.75rem;">⏭️ Qoldirildi</span>
+            <button class="btn btn-done" style="flex:1; padding:8px 6px;" onclick="completeHabit('${habit.id}')">✓ Bajarildi</button>
+            <button class="btn" style="background:rgba(148,163,184,0.15); border:1px solid rgba(148,163,184,0.3); color:#cbd5e1; flex:1; padding:8px 6px; border-radius:10px; font-size:0.75rem;" onclick="unskipHabit('${habit.id}')">↩️ Qaytarish</button>
+          </div>`;
       } else if (isToday) {
         actionHtml = `
           <button class="btn btn-done" onclick="completeHabit('${habit.id}')">Bajarildi</button>
@@ -1934,6 +1946,27 @@
       if (!userId) return alert("Telegram ID aniqlanmadi.");
       try {
         const response = await fetch('/api/habits/skip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, habitId })
+        });
+        const resData = await response.json();
+        if (resData.success) {
+          await fetchUserHabits();
+        } else {
+          alert("Xatolik yuz berdi: " + (resData.error || "Noma'lum xato"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Server bilan bog'lanishda xatolik yuz berdi.");
+      }
+    }
+
+    // Unskip / Restore Habit API call
+    async function unskipHabit(habitId) {
+      if (!userId) return alert("Telegram ID aniqlanmadi.");
+      try {
+        const response = await fetch('/api/habits/unskip', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, habitId })
