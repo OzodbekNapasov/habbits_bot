@@ -164,9 +164,14 @@ export async function runReminderCheck(bot: Telegraf<any>): Promise<void> {
           ]);
 
           try {
+            const isMed = habit.isMedication || habit.name.toLowerCase().includes('dori') || habit.name.toLowerCase().includes('tabletka');
+            const messageText = isMed
+              ? `💊 <b>Dori ichish vaqti keldi!</b>\n\n🎯 <b>Dori nomi:</b> <b>${habit.name}</b>\n⏰ <b>Vaqt:</b> Soat <code>${habit.targetTime}</code>\n💧 <i>Shu dorini ichib, bir stakan suv bilan xo'plab oling!</i>`
+              : `🔔 <b>Eslatma vaqti keldi!</b>\n\n🎯 <b>Odat nomi:</b> <b>${habit.name}</b>\n⏰ <b>Vaqt:</b> Soat <code>${habit.targetTime}</code>\n\n✨ <i>"${quote}"</i>`;
+
             await bot.telegram.sendMessage(
               user.id,
-              `🔔 <b>Eslatma vaqti keldi!</b>\n\n🎯 <b>Odat nomi:</b> <b>${habit.name}</b>\n⏰ <b>Vaqt:</b> Soat <code>${habit.targetTime}</code>\n\n✨ <i>"${quote}"</i>`,
+              messageText,
               { parse_mode: 'HTML', ...keyboard }
             );
 

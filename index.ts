@@ -250,10 +250,28 @@ bot.command('digest', async (ctx: any) => {
 bot.hears(/(?:➕\s*)?Yangi odat/, async (ctx: any) => {
   await saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
   await setUserCreationState(ctx.from.id, { step: 'WAITING_NAME' });
+
+  const keyboard = Markup.inlineKeyboard([
+    [Markup.button.callback('💊 3 mahal dori / tabletka eslatmasi', 'create_medication')],
+  ]);
+
   await ctx.reply(
-    "📝 <b>Yangi odat nomini kiriting:</b>\n\nMasalan: <i>Yugurish, Kitob o'qish</i>\n\n<i>Bekor qilish uchun /bekor buyrug'ini yuboring.</i>",
+    "📝 <b>Yangi odat nomini kiriting:</b>\n\nMasalan: <i>Yugurish, Kitob o'qish</i>\n\nYoki maxsus <b>💊 3 mahal dori eslatmasi</b> o'rnatish uchun quyidagi tugmani bosing:\n\n<i>Bekor qilish uchun /bekor buyrug'ini yuboring.</i>",
+    { parse_mode: 'HTML', ...keyboard }
+  );
+});
+
+bot.action('create_medication', async (ctx: any) => {
+  const userId = ctx.from.id;
+  await setUserCreationState(userId, { step: 'WAITING_MEDICINE_NAME', isMedication: true });
+
+  await ctx.editMessageText(
+    "💊 <b>3 mahal dori eslatmasi</b>\n\n" +
+      "Dori yoki tabletka nomini kiriting:\n" +
+      "(Masalan: <i>Paratsetamol</i>, <i>Vitamin C</i> yoki shunchaki <b>Tabletka</b> deb nomlash uchun kiritmasdan /otkazib_yuborish buyrug'ini yuboring)",
     { parse_mode: 'HTML' }
   );
+  await ctx.answerCbQuery();
 });
 
 bot.command('bekor', async (ctx: any) => {
@@ -795,6 +813,123 @@ async function finalizeHabitCreation(ctx: any, userId: number, state: any, start
   }
 }
 
+// Medication Creation Callback Handlers
+bot.action('med_times_default', async (ctx: any) => {
+  const userId = ctx.from.id;
+  const state = await getUserCreationState(userId);
+  if (!state) return;
+
+  state.medicationTimes = ['08:00', '13:00', '20:00'];
+  state.step = 'WAITING_MEDICINE_START_DATE';
+  await setUserCreationState(userId, state);
+
+  const todayStr = getTodayDateString();
+  const tomorrowStr = getTomorrowDateString();
+  const todayUz = formatISOToUzbekDate(todayStr);
+  const tomorrowUz = formatISOToUzbekDate(tomorrowStr);
+
+  const keyboard = Markup.inlineKeyboard([
+    [Markup.button.callback(`📅 Bugundan boshlash (${todayUz})`, 'med_start_today')],
+    [Markup.button.callback(`🌅 Ertagadan boshlash (${tomorrowUz})`, 'med_start_tomorrow')],
+  ]);
+
+  await ctx.editMessageText(
+    `💊 <b>Dori nomi:</b> ${escapeHtml(state.medicineName || 'Tabletka')}\n` +
+      `⏰ <b>Vaqtlar:</b> <code>08:00</code> (Ertalab), <code>13:00</code> (Tushlik), <code>20:00</code> (Kechqurun)\n\n` +
+      `📅 <b>Qaysi kundan boshlansin?</b> (yoki sanani <b>DD.MM.YYYY</b> formatida yuboring):`,
+    { parse_mode: 'HTML', ...keyboard }
+  );
+  await ctx.answerCbQuery();
+});
+
+bot.action('med_times_custom', async (ctx: any) => {
+  const userId = ctx.from.id;
+  const state = await getUserCreationState(userId);
+  if (!state) return;
+
+  state.step = 'WAITING_MEDICINE_TIMES_INPUT';
+  await setUserCreationState(userId, state);
+
+  await ctx.editMessageText(
+    `⏰ <b>3 ta eslatma vaqtini vergul bilan kiriting (HH:mm formatida):</b>\n\n` +
+      `Masalan: <code>08:30, 14:00, 21:00</code>`,
+    { parse_mode: 'HTML' }
+  );
+  await ctx.answerCbQuery();
+});
+
+bot.action('med_start_today', async (ctx: any) => {
+  const userId = ctx.from.id;
+  const state = await getUserCreationState(userId);
+  if (!state) return;
+
+  const startDate = getTodayDateString();
+  await finalizeMedicationCreation(ctx, userId, state, startDate);
+  await ctx.answerCbQuery();
+});
+
+bot.action('med_start_tomorrow', async (ctx: any) => {
+  const userId = ctx.from.id;
+  const state = await getUserCreationState(userId);
+  if (!state) return;
+
+  const startDate = getTomorrowDateString();
+  await finalizeMedicationCreation(ctx, userId, state, startDate);
+  await ctx.answerCbQuery();
+});
+
+/**
+ * Finalizes creation of 3-times-a-day medication habits
+ */
+async function finalizeMedicationCreation(ctx: any, userId: number, state: any, startDate: string) {
+  const times = state.medicationTimes || ['08:00', '13:00', '20:00'];
+  const rawMedName = state.medicineName || 'Tabletka';
+  const labels = ['Ertalab', 'Tushlik', 'Kechqurun'];
+
+  for (let i = 0; i < 3; i++) {
+    const time = times[i];
+    const label = labels[i];
+    const fullName = `Tabletka - ${rawMedName} (${label})`;
+    const nextDueDate = calculateNextDueDateFromStartDate(
+      startDate,
+      time,
+      'kunlik',
+      [],
+      undefined
+    );
+
+    await addHabit(userId, {
+      name: fullName,
+      intervalType: 'kunlik',
+      intervalDescription: 'Har kuni',
+      startDate: startDate,
+      restDays: [],
+      targetTime: time,
+      lastCompletedAt: null,
+      nextDueDate,
+      isMedication: true,
+    });
+  }
+
+  await setUserCreationState(userId, null);
+
+  const startDateUz = formatISOToUzbekDate(startDate);
+  const message =
+    `✅ <b>3 mahal dori eslatmasi muvaffaqiyatli o'rnatildi!</b>\n\n` +
+    `💊 <b>Dori:</b> ${escapeHtml(rawMedName)}\n` +
+    `📅 <b>Boshlanish kuni:</b> <code>${startDateUz}</code>\n\n` +
+    `🌅 <b>Ertalab:</b> Soat <code>${times[0]}</code>\n` +
+    `☀️ <b>Tushlik:</b> Soat <code>${times[1]}</code>\n` +
+    `🌙 <b>Kechqurun:</b> Soat <code>${times[2]}</code>\n\n` +
+    `<i>Bot belgilangan vaqtlarda sizga eslatma yuboradi. Har safar dorini ichib, ✅ Bajarildi tugmasini bosing!</i>`;
+
+  if (ctx.callbackQuery) {
+    await ctx.editMessageText(message, { parse_mode: 'HTML' });
+  } else {
+    await ctx.reply(message, { parse_mode: 'HTML', ...mainMenuKeyboard });
+  }
+}
+
 // Multi-step Habit Registration via Text Input using Persistent DB State
 bot.on('text', async (ctx: any) => {
   const userId = ctx.from.id;
@@ -889,6 +1024,71 @@ bot.on('text', async (ctx: any) => {
     return;
   }
 
+  if (state.step === 'WAITING_MEDICINE_NAME') {
+    const medName = text === '/otkazib_yuborish' || text.startsWith('/') ? 'Tabletka' : text;
+    state.medicineName = medName;
+    state.step = 'WAITING_MEDICINE_TIMES_CHOICE';
+    await setUserCreationState(userId, state);
+
+    const keyboard = Markup.inlineKeyboard([
+      [Markup.button.callback('⏰ Standart vaqtlar (08:00, 13:00, 20:00)', 'med_times_default')],
+      [Markup.button.callback('✍️ O\'zim vaqtlarni kiritaman', 'med_times_custom')],
+    ]);
+
+    await ctx.reply(
+      `💊 <b>Dori nomi:</b> ${escapeHtml(medName)}\n\n` +
+        `Eslatma vaqtlarini tanlang:`,
+      { parse_mode: 'HTML', ...keyboard }
+    );
+    return;
+  }
+
+  if (state.step === 'WAITING_MEDICINE_TIMES_INPUT') {
+    const parts = text.split(',').map((s: string) => s.trim());
+    if (parts.length !== 3 || !parts.every((t: string) => isValidTimeFormat(t))) {
+      await ctx.reply(
+        "⚠️ Iltimos, aynan 3 ta vaqtni <b>HH:mm</b> formatida vergul bilan kiriting!\n" +
+          "Masalan: <code>08:00, 13:30, 20:00</code>",
+        { parse_mode: 'HTML' }
+      );
+      return;
+    }
+    state.medicationTimes = parts;
+    state.step = 'WAITING_MEDICINE_START_DATE';
+    await setUserCreationState(userId, state);
+
+    const todayStr = getTodayDateString();
+    const tomorrowStr = getTomorrowDateString();
+    const todayUz = formatISOToUzbekDate(todayStr);
+    const tomorrowUz = formatISOToUzbekDate(tomorrowStr);
+
+    const keyboard = Markup.inlineKeyboard([
+      [Markup.button.callback(`📅 Bugundan boshlash (${todayUz})`, 'med_start_today')],
+      [Markup.button.callback(`🌅 Ertagadan boshlash (${tomorrowUz})`, 'med_start_tomorrow')],
+    ]);
+
+    await ctx.reply(
+      `💊 <b>Dori nomi:</b> ${escapeHtml(state.medicineName || 'Tabletka')}\n` +
+        `⏰ <b>Vaqtlar:</b> <code>${parts.join('</code>, <code>')}</code>\n\n` +
+        `📅 <b>Qaysi kundan boshlansin?</b> (yoki sanani <b>DD.MM.YYYY</b> formatida yuboring):`,
+      { parse_mode: 'HTML', ...keyboard }
+    );
+    return;
+  }
+
+  if (state.step === 'WAITING_MEDICINE_START_DATE') {
+    const isoDate = parseUzbekDateToISO(text);
+    if (!isoDate) {
+      await ctx.reply(
+        "⚠️ Noto'g'ri sana formati. Iltimos, sanani <b>DD.MM.YYYY</b> formatida kiriting (masalan: <code>06.08.2026</code>):",
+        { parse_mode: 'HTML' }
+      );
+      return;
+    }
+    await finalizeMedicationCreation(ctx, userId, state, isoDate);
+    return;
+  }
+
   if (state.step === 'WAITING_NAME') {
     state.name = text;
     state.step = 'WAITING_INTERVAL';
@@ -968,6 +1168,22 @@ bot.catch((err: any) => {
   console.error(`Bot xatoligi yuz berdi:`, err);
 });
 
+// Send update notification function
+export async function sendUpdateNotification() {
+  const versionMsg =
+    `🚀 <b>Botga yangi versiya keldi!</b>\n\n` +
+    `✨ <b>Yangi imkoniyatlar:</b>\n` +
+    `💊 <b>3 mahal dori / tabletka eslatmasi:</b> Kuniga 3 mahal dori ichish uchun maxsus vaqtlar (08:00, 13:00, 20:00 yoki o'zingiz kiritgan vaqtlar) bo'yicha eslatmalar shakllantirish va suv bilan ichish haqida chiroyli bildirishnoma olib turish funksiyasi qo'shildi.\n\n` +
+    `Sinab ko'rish uchun menyudan <b>➕ Yangi odat</b> tugmasini bosing!`;
+
+  try {
+    await bot.telegram.sendMessage(ALLOWED_USER_ID, versionMsg, { parse_mode: 'HTML' });
+    console.log(`[UPDATE NOTIFICATION] Yangi versiya haqida xabar yuborildi: ${ALLOWED_USER_ID}`);
+  } catch (err) {
+    console.error(`[UPDATE NOTIFICATION] Xatolik:`, err);
+  }
+}
+
 if (process.env.VERCEL !== '1') {
   // Load database from GitHub repository
   const { loadFromGitHub } = require('./database');
@@ -981,5 +1197,7 @@ if (process.env.VERCEL !== '1') {
 
   // Start the bot with long polling locally
   console.log('🤖 Telegram Odatlar Boti (Telegraf) ishga tushmoqda...');
-  bot.launch();
+  bot.launch().then(() => {
+    sendUpdateNotification();
+  });
 }

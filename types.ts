@@ -18,6 +18,8 @@ export interface Habit {
   completionHistory?: string[];
   /** Pending re-notification times for today e.g. ['20:10','20:20','20:30'] */
   pendingReminderTimes?: string[];
+  /** Flag indicating if habit is a medication/dori reminder */
+  isMedication?: boolean;
 }
 
 export interface User {
