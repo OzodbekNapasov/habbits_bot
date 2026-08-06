@@ -48,6 +48,8 @@
       gap: 20px;
       overflow-x: hidden;
       position: relative;
+      max-width: 640px;
+      margin: 0 auto;
     }
 
     /* Ambient glowing background blobs */
@@ -618,7 +620,7 @@
     .fab-btn {
       position: fixed;
       bottom: 24px;
-      right: 24px;
+      right: max(24px, calc(50vw - 320px + 24px));
       width: 56px;
       height: 56px;
       border-radius: 50%;
@@ -669,15 +671,17 @@
 
     .bottom-sheet {
       position: fixed;
-      left: 0;
-      right: 0;
+      left: 50%;
       bottom: 0;
+      width: 100%;
+      max-width: 640px;
       background: var(--bg-color);
-      border-top: 1px solid var(--card-border);
+      border: 1px solid var(--card-border);
+      border-bottom: none;
       border-top-left-radius: 28px;
       border-top-right-radius: 28px;
       z-index: 101;
-      transform: translateY(100%);
+      transform: translate(-50%, 100%);
       transition: transform 0.35s cubic-bezier(0.32, 0.94, 0.6, 1);
       padding: 24px;
       max-height: 85vh;
@@ -689,7 +693,7 @@
     }
 
     .bottom-sheet.open {
-      transform: translateY(0);
+      transform: translate(-50%, 0);
     }
 
     .sheet-header {
