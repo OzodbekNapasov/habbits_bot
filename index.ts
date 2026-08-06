@@ -246,6 +246,33 @@ bot.command('digest', async (ctx: any) => {
   await triggerDailyDigest(bot, ctx.from.id);
 });
 
+bot.command(['test', 'test_eslatma'], async (ctx: any) => {
+  const keyboard = Markup.inlineKeyboard([
+    [Markup.button.callback('🟢 ✅ Bajarildi', 'done_sample')],
+    [
+      Markup.button.callback('⏰ 15 daqiqa', 'delay_15_sample'),
+      Markup.button.callback('⏰ 30 daqiqa', 'delay_30_sample'),
+      Markup.button.callback('⏰ 1 soat', 'delay_60_sample'),
+    ],
+    [Markup.button.callback('🔴 ❌ Qoldirish', 'skip_sample')],
+  ]);
+
+  const sampleNormalMsg =
+    `🔔 <b>Eslatma vaqti keldi! (Test)</b>\n\n` +
+    `<blockquote>🎯 <b>Odat nomi:</b> <b>Kitob o'qish bo'yicha</b>\n` +
+    `⏰ <b>Vaqt:</b> Soat <code>15:15</code></blockquote>\n\n` +
+    `<blockquote>✨ <i>"Har bir daqiqa o'z maqsadlaringizga yaqinlashish uchun imkoniyatdir."</i></blockquote>`;
+
+  const sampleMedMsg =
+    `💊 <b>Dori ichish vaqti keldi! (Test)</b>\n\n` +
+    `<blockquote>🎯 <b>Dori nomi:</b> <b>Tabletka - Paratsetamol (Ertalab)</b>\n` +
+    `⏰ <b>Vaqt:</b> Soat <code>08:00</code>\n` +
+    `💧 <i>Shu dorini ichib, bir stakan suv bilan xo'plab oling!</i></blockquote>`;
+
+  await ctx.reply(sampleNormalMsg, { parse_mode: 'HTML', ...keyboard });
+  await ctx.reply(sampleMedMsg, { parse_mode: 'HTML', ...keyboard });
+});
+
 // Habit Creation Flow Handlers
 bot.hears(/(?:➕\s*)?Yangi odat/, async (ctx: any) => {
   await saveUser({ id: ctx.from.id, firstName: ctx.from.first_name || 'Foydalanuvchi' });
@@ -562,6 +589,22 @@ bot.action(/^skip_(.+)$/, async (ctx: any) => {
 
   await ctx.editMessageText('❌ Bu safargi harakat qoldirildi.');
   await ctx.answerCbQuery("Harakat qoldirildi. ❌");
+});
+
+bot.action('done_sample', async (ctx: any) => {
+  await ctx.editMessageText('🎉 <b>Barakalla! Test eslatmasi bajarildi!</b>', { parse_mode: 'HTML' });
+  await ctx.answerCbQuery("Barakalla! 🎉");
+});
+
+bot.action('skip_sample', async (ctx: any) => {
+  await ctx.editMessageText('❌ <b>Test eslatmasi qoldirildi.</b>', { parse_mode: 'HTML' });
+  await ctx.answerCbQuery("Harakat qoldirildi. ❌");
+});
+
+bot.action(/^delay_(\d+)_sample$/, async (ctx: any) => {
+  const min = ctx.match[1];
+  await ctx.editMessageText(`⏱ <b>Test eslatmasi ${min} daqiqaga surildi.</b>`, { parse_mode: 'HTML' });
+  await ctx.answerCbQuery(`${min} daqiqaga surildi! ⏱`);
 });
 
 bot.action(/^delay_(\d+)_(.+)$/, async (ctx: any) => {
