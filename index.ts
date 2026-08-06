@@ -1172,9 +1172,9 @@ bot.catch((err: any) => {
 export async function sendUpdateNotification() {
   const versionMsg =
     `🚀 <b>Botga yangi versiya keldi!</b>\n\n` +
-    `✨ <b>Yangi imkoniyatlar:</b>\n` +
-    `💊 <b>3 mahal dori / tabletka eslatmasi:</b> Kuniga 3 mahal dori ichish uchun maxsus vaqtlar (08:00, 13:00, 20:00 yoki o'zingiz kiritgan vaqtlar) bo'yicha eslatmalar shakllantirish va suv bilan ichish haqida chiroyli bildirishnoma olib turish funksiyasi qo'shildi.\n\n` +
-    `Sinab ko'rish uchun menyudan <b>➕ Yangi odat</b> tugmasini bosing!`;
+    `<blockquote>✨ <b>Yangi imkoniyatlar:</b>\n` +
+    `💊 <b>3 mahal dori / tabletka eslatmasi:</b> Kuniga 3 mahal dori ichish uchun maxsus vaqtlar (<code>08:00</code>, <code>13:00</code>, <code>20:00</code> yoki moslashtirilgan vaqtlar) bo'yicha eslatmalar shakllantirish hamda suv bilan ichish bo'yicha chiroyli bildirishnoma va kartochkalar yaratildi.</blockquote>\n\n` +
+    `<i>Sinab ko'rish uchun menyudan <b>➕ Yangi odat</b> tugmasini bosing!</i>`;
 
   try {
     await bot.telegram.sendMessage(ALLOWED_USER_ID, versionMsg, { parse_mode: 'HTML' });

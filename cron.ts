@@ -154,20 +154,27 @@ export async function runReminderCheck(bot: Telegraf<any>): Promise<void> {
           );
 
           const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('✅ Bajarildi', `done_${habit.id}`)],
+            [Markup.button.callback('🟢 ✅ Bajarildi', `done_${habit.id}`)],
             [
               Markup.button.callback('⏰ 15 daqiqa', `delay_15_${habit.id}`),
               Markup.button.callback('⏰ 30 daqiqa', `delay_30_${habit.id}`),
               Markup.button.callback('⏰ 1 soat', `delay_60_${habit.id}`),
             ],
-            [Markup.button.callback('❌ Qoldirish', `skip_${habit.id}`)],
+            [Markup.button.callback('🔴 ❌ Qoldirish', `skip_${habit.id}`)],
           ]);
 
           try {
             const isMed = habit.isMedication || habit.name.toLowerCase().includes('dori') || habit.name.toLowerCase().includes('tabletka');
+            const { escapeHtml } = require('./utils');
             const messageText = isMed
-              ? `💊 <b>Dori ichish vaqti keldi!</b>\n\n🎯 <b>Dori nomi:</b> <b>${habit.name}</b>\n⏰ <b>Vaqt:</b> Soat <code>${habit.targetTime}</code>\n💧 <i>Shu dorini ichib, bir stakan suv bilan xo'plab oling!</i>`
-              : `🔔 <b>Eslatma vaqti keldi!</b>\n\n🎯 <b>Odat nomi:</b> <b>${habit.name}</b>\n⏰ <b>Vaqt:</b> Soat <code>${habit.targetTime}</code>\n\n✨ <i>"${quote}"</i>`;
+              ? `💊 <b>Dori ichish vaqti keldi!</b>\n\n` +
+                `<blockquote>🎯 <b>Dori nomi:</b> <b>${escapeHtml(habit.name)}</b>\n` +
+                `⏰ <b>Vaqt:</b> Soat <code>${habit.targetTime}</code>\n` +
+                `💧 <i>Shu dorini ichib, bir stakan suv bilan xo'plab oling!</i></blockquote>`
+              : `🔔 <b>Eslatma vaqti keldi!</b>\n\n` +
+                `<blockquote>🎯 <b>Odat nomi:</b> <b>${escapeHtml(habit.name)}</b>\n` +
+                `⏰ <b>Vaqt:</b> Soat <code>${habit.targetTime}</code></blockquote>\n\n` +
+                `<blockquote>✨ <i>"${quote}"</i></blockquote>`;
 
             await bot.telegram.sendMessage(
               user.id,
@@ -193,14 +200,17 @@ export async function runReminderCheck(bot: Telegraf<any>): Promise<void> {
           pending.includes(nowTimeStr)
         ) {
           const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('✅ Bajarildi', `done_${habit.id}`)],
-            [Markup.button.callback('❌ Qoldirish', `skip_${habit.id}`)],
+            [Markup.button.callback('🟢 ✅ Bajarildi', `done_${habit.id}`)],
+            [Markup.button.callback('🔴 ❌ Qoldirish', `skip_${habit.id}`)],
           ]);
 
           try {
+            const { escapeHtml } = require('./utils');
             await bot.telegram.sendMessage(
               user.id,
-              `⚠️ <b>Hali bajarilmagan:</b> <b>${habit.name}</b>\n⏰ Soat <code>${nowTimeStr}</code> - Bajarish vaqti o'tib borayapti!`,
+              `⚠️ <b>Hali bajarilmagan eslatma:</b>\n\n` +
+                `<blockquote>🎯 <b>Odat:</b> <b>${escapeHtml(habit.name)}</b>\n` +
+                `⏰ <b>Vaqti:</b> Soat <code>${nowTimeStr}</code> — bajarish vaqti o'tib borayapti!</blockquote>`,
               { parse_mode: 'HTML', ...keyboard }
             );
 
