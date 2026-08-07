@@ -104,9 +104,10 @@
           "nextDueDate": "2026-08-08",
           "pendingReminderTimes": [],
           "completionHistory": [
-            "2026-08-06"
+            "2026-08-06",
+            "2026-08-07"
           ],
-          "streak": 1,
+          "streak": 2,
           "lastNotifiedDueDate": "2026-08-07_17:21"
         }
       ],
