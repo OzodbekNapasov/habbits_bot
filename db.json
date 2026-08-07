@@ -50,9 +50,10 @@
           "pendingReminderTimes": [],
           "completionHistory": [
             "2026-08-03",
-            "2026-08-04"
+            "2026-08-04",
+            "2026-08-07"
           ],
-          "streak": 2,
+          "streak": 1,
           "lastNotifiedDueDate": "2026-08-07_15:00"
         },
         {
