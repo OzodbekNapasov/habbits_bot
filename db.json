@@ -100,12 +100,9 @@
           "startDate": "2026-08-06",
           "restDays": [],
           "targetTime": "17:21",
-          "lastCompletedAt": "2026-08-06",
-          "nextDueDate": "2026-08-07",
-          "pendingReminderTimes": [
-            "17:41",
-            "17:51"
-          ],
+          "lastCompletedAt": "2026-08-07",
+          "nextDueDate": "2026-08-08",
+          "pendingReminderTimes": [],
           "completionHistory": [
             "2026-08-06"
           ],
