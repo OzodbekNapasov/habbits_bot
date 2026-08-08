@@ -66,13 +66,17 @@
           "targetTime": "09:20",
           "lastCompletedAt": "2026-08-07",
           "nextDueDate": "2026-08-08",
-          "pendingReminderTimes": [],
+          "pendingReminderTimes": [
+            "09:30",
+            "09:40",
+            "09:50"
+          ],
           "completionHistory": [
             "2026-08-06",
             "2026-08-07"
           ],
           "streak": 2,
-          "lastNotifiedDueDate": "2026-08-07_09:20"
+          "lastNotifiedDueDate": "2026-08-08_09:20"
         },
         {
           "id": "e81f1a23-4567-4890-a1b2-c3d4e5f60002",
