@@ -57,26 +57,6 @@
           ],
           "streak": 3,
           "lastNotifiedDueDate": "2026-08-09_15:00"
-        },
-        {
-          "id": "e81f1a23-4567-4890-a1b2-c3d4e5f60003",
-          "name": "Tabletka ichish (Kechqurun)",
-          "intervalType": "kunlik",
-          "intervalDescription": "Har kuni",
-          "startDate": "2026-08-06",
-          "restDays": [],
-          "targetTime": "18:49",
-          "lastCompletedAt": "2026-08-09",
-          "nextDueDate": "2026-08-10",
-          "pendingReminderTimes": [],
-          "completionHistory": [
-            "2026-08-06",
-            "2026-08-07",
-            "2026-08-08",
-            "2026-08-09"
-          ],
-          "streak": 4,
-          "lastNotifiedDueDate": "2026-08-09_18:49"
         }
       ],
       "creationState": null,
