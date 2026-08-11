@@ -58,7 +58,8 @@
             "2026-08-11"
           ],
           "streak": 5,
-          "lastNotifiedDueDate": "2026-08-11_15:00"
+          "lastNotifiedDueDate": "2026-08-11_15:00",
+          "lastSkippedAt": "2026-08-11"
         }
       ],
       "creationState": null,
