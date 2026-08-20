@@ -47,7 +47,11 @@
           "targetTime": "15:00",
           "lastCompletedAt": "2026-08-19",
           "nextDueDate": "2026-08-20",
-          "pendingReminderTimes": [],
+          "pendingReminderTimes": [
+            "15:10",
+            "15:20",
+            "15:30"
+          ],
           "completionHistory": [
             "2026-08-03",
             "2026-08-04",
@@ -66,7 +70,7 @@
             "2026-08-19"
           ],
           "streak": 13,
-          "lastNotifiedDueDate": "2026-08-19_15:00",
+          "lastNotifiedDueDate": "2026-08-20_15:00",
           "lastSkippedAt": "2026-08-11"
         }
       ],
