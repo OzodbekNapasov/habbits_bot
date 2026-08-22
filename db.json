@@ -16,7 +16,11 @@
           "lastCompletedAt": "2026-08-22",
           "nextDueDate": "2026-09-11",
           "lastNotifiedDueDate": "2026-08-22_16:00",
-          "pendingReminderTimes": []
+          "pendingReminderTimes": [],
+          "completionHistory": [
+            "2026-08-22"
+          ],
+          "streak": 1
         },
         {
           "id": "b8ce91d0-23ff-485d-a789-695f780f3597",
