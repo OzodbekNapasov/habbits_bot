@@ -23,25 +23,6 @@
           "streak": 1
         },
         {
-          "id": "b8ce91d0-23ff-485d-a789-695f780f3597",
-          "name": "Mashg'ulot",
-          "intervalType": "kunlik",
-          "intervalDescription": "Kunlik (Har kuni)",
-          "startDate": "2026-08-02",
-          "restDays": [
-            "Yakshanba"
-          ],
-          "targetTime": "20:00",
-          "lastCompletedAt": "2026-08-03",
-          "nextDueDate": "2026-08-04",
-          "lastNotifiedDueDate": "2026-08-04_20:00",
-          "pendingReminderTimes": [],
-          "completionHistory": [
-            "2026-08-03"
-          ],
-          "streak": 1
-        },
-        {
           "id": "ce8f2811-fac5-4136-bd4c-f00d15375f62",
           "name": "10 bet Kitob o'qish",
           "intervalType": "kunlik",
