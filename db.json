@@ -45,7 +45,9 @@
           "nextDueDate": "2026-08-29"
         }
       ],
-      "creationState": null,
+      "creationState": {
+        "step": "WAITING_NAME"
+      },
       "customName": "SAVITAR",
       "customAvatar": "SV",
       "customSubtitle": "Admin",
