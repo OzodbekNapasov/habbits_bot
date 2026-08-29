@@ -85,6 +85,17 @@
           "targetTime": "15:00",
           "lastCompletedAt": null,
           "nextDueDate": "2026-08-29"
+        },
+        {
+          "id": "b5ac39da-ad0e-4815-869b-69444b143449",
+          "name": "Kechki mashg'ulotlar",
+          "intervalType": "daily",
+          "intervalDescription": "Har kuni",
+          "startDate": "2026-08-29",
+          "restDays": [],
+          "targetTime": "19:40",
+          "lastCompletedAt": null,
+          "nextDueDate": "2026-08-29"
         }
       ],
       "creationState": null,
