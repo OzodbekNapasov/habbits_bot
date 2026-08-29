@@ -74,6 +74,17 @@
           "streak": 13,
           "lastNotifiedDueDate": "2026-08-20_15:00",
           "lastSkippedAt": "2026-08-11"
+        },
+        {
+          "id": "9331c113-445c-42ff-bf08-908c731188ad",
+          "name": "MEN kitobini o'qish",
+          "intervalType": "daily",
+          "intervalDescription": "Har kuni",
+          "startDate": "2026-08-29",
+          "restDays": [],
+          "targetTime": "15:00",
+          "lastCompletedAt": null,
+          "nextDueDate": "2026-08-29"
         }
       ],
       "creationState": null,
